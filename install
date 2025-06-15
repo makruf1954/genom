@@ -44,6 +44,7 @@ clear
 mkdir -p /etc/data
 
 # Mendapatkan IP publik pengguna
+# PERBAIKAN: Menggunakan curl untuk mendapatkan IP publik yang akurat
 user_ip=$(curl -s https://ipinfo.io/ip)
 
 # Meminta nama client dan memvalidasi
@@ -60,13 +61,33 @@ while true; do
     fi
 
     # Menggunakan curl untuk memeriksa apakah client_name ada dalam file permission.txt
+    # PERBAIKAN: Menggunakan URL raw.githubusercontent.com yang benar
     permission_file=$(curl -s https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/izin.txt)
-    if echo "$permission_file" | grep -q -i "$client_name"; then
-        exp_date=$(echo "$permission_file" | grep -i "$client_name" | awk '{print $4}')
+    
+    # PERBAIKAN: Mengambil IP_VPS juga untuk validasi di izin.txt
+    IP_VPS=$(curl -s https://ipinfo.io/ip) # Pastikan ini mengambil IP publik
+
+    if echo "$permission_file" | grep -q -i "$client_name" && echo "$permission_file" | grep -q "$IP_VPS"; then
+        # PERBAIKAN: Mengambil tanggal kedaluwarsa dari kolom ke-3 (bukan ke-4)
+        exp_date=$(echo "$permission_file" | grep -i "$client_name" | awk '{print $3}')
+        
+        # Validasi format tanggal
+        if ! [[ "$exp_date" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]]; then
+            echo -e "${RED}❌ Format tanggal invalid: '$exp_date' (harusYYYY-MM-DD)${NC}"
+            exit 1
+        fi
+
+        # Validasi tanggal menggunakan date
+        if ! date -d "$exp_date" "+%s" &>/dev/null; then
+            echo -e "${RED}❌ Tanggal tidak valid secara kalender: $exp_date${NC}"
+            exit 1
+        fi
+
         echo "Client Name accepted... Let's go..."
         break
     else
-        echo "Untuk Daftar Hubungi Admin Hokage Legend"
+        echo -e "${RED}❌ Client Name atau IP ($IP_VPS) tidak terdaftar!${NC}"
+        echo -e "➥ Hubungi admin ${CYAN}「 ✦ @HokageLegend ✦ 」${NC}"
         rm -f /root/home # Ganti dengan path yang sesuai ke file installer
         exit 1
     fi
@@ -96,9 +117,9 @@ send_telegram_message() {
         -d chat_id="$CHAT_ID" \
         -d parse_mode="MarkdownV2" \
         -d text="$MESSAGE" \
-        -d reply_markup='{
+    -d reply_markup='{
             "inline_keyboard": [
-                [{"text": "'"$BUTTON_TEXT1"'", "url": "'"$BUTTON1_URL"'"}, {"text": "'"$BUTTON_TEXT2"'", "url": "'"$BUTTON2_URL"'"}]
+                [{"text": "'"$BUTTON_TEXT1"'", "url": "'"$BUTTON1_URL"'"}, {"text": "'"$BUTTON2_TEXT2"'", "url": "'"$BUTTON2_URL"'"}]
             ]
         }')
 
@@ -168,7 +189,12 @@ author=$(cat /etc/profil)
 echo ""
 echo ""
 
-fun_bar_domain() {
+# HAPUS FUNGSI FUN_BAR KARENA ANDA INGIN OUTPUT TERLIHAT LANGSUNG
+# SAYA HANYA MENINGGALKAN BAGIAN FUN_BAR YANG DIPANGGIL UNTUK "Update Domain"
+# JIKA ANDA INGIN FUN_BAR INI HILANG JUGA, MAKA KELUARKAN KODE INI DARI SINI
+# DAN GANTI PANGGILAN fun_bar DI BAWAH DENGAN echo dan sleep biasa.
+
+fun_bar() {
     CMD[0]="$1"
     CMD[1]="$2"
     (
@@ -264,6 +290,7 @@ echo "cyan" > /etc/phreakers/theme/color.conf
 ##############################################################################
 
 # Disable IPv6
+echo -e "${GREEN}Mematikan IPv6...${NC}"
 sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1
 sysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null 2>&1
 echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
@@ -274,80 +301,151 @@ sysctl -p >/dev/null 2>&1
 echo -e "${GREEN}Mematikan AppArmor...${NC}"
 systemctl disable --now apparmor >/dev/null 2>&1
 systemctl stop apparmor >/dev/null 2>&1
-update-rc.d -f apparmor remove >/dev/null 2>&1
+update-rc.d -f apparmor remove >/dev/null 2>&1 # Ini mungkin tidak ada di semua sistem, tapi aman.
 apt-get purge apparmor apparmor-utils -y >/dev/null 2>&1
 
 clear
-wget https://github.com/hokagelegend9999/genom/raw/refs/heads/main/TOOLS/tools.sh &> /dev/null
+wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-Tools/tools.sh &> /dev/null
 chmod +x tools.sh 
 bash tools.sh
 start=$(date +%s)
 ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
-# Update dan instal dependensi umum
+# Update dan instal dependensi umum untuk Ubuntu 24.04
 echo -e "${GREEN}Memperbarui sistem dan menginstal dependensi...${NC}"
+# PERBAIKAN: Mengganti 'netcat' dengan 'netcat-openbsd' dan 'ncurses-utils' dengan 'ncurses-bin'
 apt update -y && apt upgrade -y
-apt install git curl python3 python3-pip apt-transport-https ca-certificates software-properties-common wget -y
+apt install git curl python3 python3-pip apt-transport-https ca-certificates software-properties-common wget netcat-openbsd ncurses-bin -y
 
 ##############################################################################
 
 cd
 clear
-wget https://github.com/hokagelegend9999/genom/raw/refs/heads/main/TOOLS/limit.sh && ./limit.sh
+wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-Tools/limit.sh && chmod +x limit.sh && ./limit.sh
 clear
 
 ##############################################################################
 
 ##############################################################################
 
-function install_module(){
-    local script_name="$1"
-    local display_name="$2"
-    local url="https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/${script_name}"
-
-    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-    echo -e "${BIBlue}│ ${BGCOLOR}      PROCESS INSTALLING ${display_name}    ${NC}${BIBlue} │${NC}"
-    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
-    tput civis
-    echo -ne "  \033[0;33mSedang Menginstal ${display_name} \033[1;37m- \033[0;33m["
-    (
-        wget -q "$url" -O "/root/${script_name}" && \
-        chmod +x "/root/${script_name}" && \
-        bash "/root/${script_name}"
-    ) >/dev/null 2>&1 &
-    
-    local pid=$!
-    while ps -p $pid > /dev/null; do
-        for ((i = 0; i < 18; i++)); do
-            echo -ne "\033[0;32m#"
-            sleep 0.1s
-        done
-        echo -e "\033[0;33m]"
-        sleep 1s
-        tput cuu1
-        tput dl1
-        echo -ne "  \033[0;33mSedang Menginstal ${display_name} \033[1;37m- \033[0;33m["
-    done
-    
-    echo -e "\033[0;33m]\033[1;37m -\033[1;32m Complete !\033[1;37m"
-    tput cnorm
+# Fungsi asli untuk instalasi modul - outputnya akan terlihat langsung
+res3() {
+    echo -e "${GREEN}   Memulai instalasi SSH WS / OpenVPN...${NC}" # Pesan tambahan untuk kejelasan
+    wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-System/ssh-vpn.sh
+    chmod +x ssh-vpn.sh
+    ./ssh-vpn.sh
     clear
 }
 
-install_module "SYSTEM/ssh-vpn.sh" "SSH WS / OPENVPN"
-install_module "SYSTEM/ins-xray.sh" "XRAY"
-install_module "WEBSOCKET/insshws.sh" "WEBSOCKET SSH"
-install_module "SYSTEM/set-br.sh" "BACKUP MENU"
-install_module "WEBSOCKET/ohp.sh" "OHP"
-install_module "menu/update.sh" "EXTRA MENU"
-install_module "SYSTEM/slowdns.sh" "SLOWDNS"
-install_module "SYSTEM/udp-custom.sh" "UDP CUSTOM"
+res4() {
+    echo -e "${GREEN}   Memulai instalasi XRAY...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-System/ins-xray.sh
+    chmod +x ins-xray.sh
+    ./ins-xray.sh
+    clear
+}
 
+res5() {
+    echo -e "${GREEN}   Memulai instalasi WEBSOCKET SSH...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-ws/insshws.sh
+    chmod +x insshws.sh
+    ./insshws.sh
+    clear
+}
+
+res6() {
+    echo -e "${GREEN}   Memulai instalasi BACKUP MENU...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-System/set-br.sh
+    chmod +x set-br.sh
+    ./set-br.sh
+    clear
+}
+
+res7() {
+    echo -e "${GREEN}   Memulai instalasi OHP...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-ws/ohp.sh
+    chmod +x ohp.sh
+    ./ohp.sh
+    clear
+}
+
+res8() {
+    echo -e "${GREEN}   Memulai pengunduhan EXTRA MENU...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/menu/update.sh
+    chmod +x update.sh
+    ./update.sh
+    clear
+}
+
+res9() {
+    echo -e "${GREEN}   Memulai pengunduhan SLOWDNS...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-System/slowdns.sh
+    chmod +x slowdns.sh
+    ./slowdns.sh
+    clear
+}
+
+res10() {
+    echo -e "${GREEN}   Memulai pengunduhan UDP CUSTOM...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-System/udp-custom.sh
+    chmod +x udp-custom.sh
+    bash udp-custom.sh # Menggunakan bash karena skrip aslinya menggunakan bash di sini
+    clear
+}
+
+# Bagian pemanggilan fungsi di SKT4100
+# LANGSUNG PANGGIL FUNGSI RESX UNTUK MELIHAT OUTPUTNYA
+function SKT4100(){
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}      PROCESS INSTALLED SSH WS / OPENVPN    ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res3
+
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}        PROCESS INSTALLED XRAY          ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res4
+
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}      PROCESS INSTALLED WEBSOCKET SSH   ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res5
+
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}      PROCESS INSTALLED BACKUP MENU     ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res6
+
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}        PROCESS INSTALLED OHP           ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res7
+
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}        DOWNLOAD EXTRA MENU             ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res8
+
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}        DOWNLOAD SLOWDNS                ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res9
+
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}        DOWNLOAD UDP COSTUM             ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res10
+}
+SKT4100 # Memanggil fungsi SKT4100
 
 ##############################################################################
 
 ##############################################################################
+
+# PERBAIKAN: Pastikan file /home/re_otm ada dan berikan nilai default jika tidak
+if [ ! -f "/home/re_otm" ]; then
+    echo "0" > /home/re_otm
+fi
 
 cat> /root/.profile << END
 if [ "$BASH" ]; then
@@ -370,9 +468,9 @@ if [ ! -f "/etc/log-create-user.log" ]; then
 echo "Log All Account " > /etc/log-create-user.log
 fi
 history -c
-serverV=$( curl -sS https://github.com/hokagelegend9999/genom/raw/refs/heads/main/TOOLS/skt-versi )
+serverV=$( curl -sS https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-Tools/skt-versi )
 echo "$serverV" > /opt/.ver
-aureb=$(cat /home/re_otm)
+aureb=$(cat /home/re_otm) # Baris ini sekarang aman karena file dipastikan ada
 b=11
 if [ "$aureb" -gt "$b" ]
 then
