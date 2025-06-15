@@ -60,7 +60,7 @@ while true; do
     fi
 
     # Menggunakan curl untuk memeriksa apakah client_name ada dalam file permission.txt
-    permission_file=$(curl -s https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/izin.txt)
+    permission_file=$(curl -s https://github.com/hokagelegend9999/genom/raw/refs/heads/main/izin.txt)
     if echo "$permission_file" | grep -q -i "$client_name"; then
         exp_date=$(echo "$permission_file" | grep -i "$client_name" | awk '{print $4}')
         echo "Client Name accepted... Let's go..."
@@ -278,7 +278,7 @@ update-rc.d -f apparmor remove >/dev/null 2>&1
 apt-get purge apparmor apparmor-utils -y >/dev/null 2>&1
 
 clear
-wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-Tools/tools.sh &> /dev/null
+wget https://github.com/hokagelegend9999/genom/raw/refs/heads/main/TOOLS/tools.sh &> /dev/null
 chmod +x tools.sh 
 bash tools.sh
 start=$(date +%s)
@@ -293,7 +293,7 @@ apt install git curl python3 python3-pip apt-transport-https ca-certificates sof
 
 cd
 clear
-wget https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-Tools/limit.sh && chmod +x limit.sh && ./limit.sh
+wget https://github.com/hokagelegend9999/genom/raw/refs/heads/main/TOOLS/limit.sh && ./limit.sh
 clear
 
 ##############################################################################
@@ -303,7 +303,7 @@ clear
 function install_module(){
     local script_name="$1"
     local display_name="$2"
-    local url="https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/${script_name}"
+    local url="https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/${script_name}"
 
     echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
     echo -e "${BIBlue}│ ${BGCOLOR}      PROCESS INSTALLING ${display_name}    ${NC}${BIBlue} │${NC}"
@@ -335,14 +335,14 @@ function install_module(){
     clear
 }
 
-install_module "SKT-System/ssh-vpn.sh" "SSH WS / OPENVPN"
-install_module "SKT-System/ins-xray.sh" "XRAY"
-install_module "SKT-ws/insshws.sh" "WEBSOCKET SSH"
-install_module "SKT-System/set-br.sh" "BACKUP MENU"
-install_module "SKT-ws/ohp.sh" "OHP"
+install_module "SYSTEM/ssh-vpn.sh" "SSH WS / OPENVPN"
+install_module "SYSTEM/ins-xray.sh" "XRAY"
+install_module "WEBSOCKET/insshws.sh" "WEBSOCKET SSH"
+install_module "SYSTEM/set-br.sh" "BACKUP MENU"
+install_module "WEBSOCKET/ohp.sh" "OHP"
 install_module "menu/update.sh" "EXTRA MENU"
-install_module "SKT-System/slowdns.sh" "SLOWDNS"
-install_module "SKT-System/udp-custom.sh" "UDP CUSTOM"
+install_module "SYSTEM/slowdns.sh" "SLOWDNS"
+install_module "SYSTEM/udp-custom.sh" "UDP CUSTOM"
 
 
 ##############################################################################
@@ -370,7 +370,7 @@ if [ ! -f "/etc/log-create-user.log" ]; then
 echo "Log All Account " > /etc/log-create-user.log
 fi
 history -c
-serverV=$( curl -sS https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-Tools/skt-versi )
+serverV=$( curl -sS https://github.com/hokagelegend9999/genom/raw/refs/heads/main/TOOLS/skt-versi )
 echo "$serverV" > /opt/.ver
 aureb=$(cat /home/re_otm)
 b=11
