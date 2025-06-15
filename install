@@ -392,6 +392,20 @@ res10() {
     bash udp-custom.sh # Menggunakan bash karena skrip aslinya menggunakan bash di sini
     clear
 }
+res11() {
+sudo sed -i 's/^[[:space:]]*#*DROPBEAR_EXTRA_ARGS=.*/DROPBEAR_EXTRA_ARGS="-p 50000 -p 109"/' /etc/default/dropbear
+sudo sed -i 's/^#DROPBEAR_PORT=.*/DROPBEAR_PORT=149/' /etc/default/dropbear
+sudo mkdir -p /etc/dropbear/
+sudo dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+sudo dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+sudo chmod 600 /etc/dropbear/dropbear_dss_host_key
+sudo chmod 600 /etc/dropbear/dropbear_rsa_host_key
+sudo chown root:root /etc/dropbear/dropbear_dss_host_key
+sudo chown root:root /etc/dropbear/dropbear_rsa_host_key
+sudo systemctl daemon-reload
+sudo systemctl restart dropbear
+    clear
+}
 
 # Bagian pemanggilan fungsi di SKT4100
 # LANGSUNG PANGGIL FUNGSI RESX UNTUK MELIHAT OUTPUTNYA
@@ -509,8 +523,6 @@ mkdir -p /etc/vless
 mkdir -p /etc/trojan
 touch /etc/bot/.bot.db
 touch /etc/vmess/.vmess.db
-sudo sed -i 's/^[[:space:]]*#*DROPBEAR_EXTRA_ARGS=.*/DROPBEAR_EXTRA_ARGS="-p 50000 -p 109"/' /etc/default/dropbear
-sudo sed -i 's/^#DROPBEAR_PORT=.*/DROPBEAR_PORT=2222/' /etc/default/dropbear
 secs_to_human "$(($(date +%s) - ${start}))" | tee -a log-install.txt
 sleep 3
 echo  ""
