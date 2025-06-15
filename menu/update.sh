@@ -106,19 +106,19 @@ wget -q -O /usr/bin/m-vmess "https://raw.githubusercontent.com/hokagelegend9999/
 wget -q -O /usr/bin/m-vless "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/m-vless.sh" && chmod +x /usr/bin/m-vless
 wget -q -O /usr/bin/m-trojan "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/m-trojan.sh" && chmod +x /usr/bin/m-trojan
 
-wget -q -O /usr/bin/skt-system "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/skt-system.sh" && chmod +x /usr/bin/skt-system
-wget -q -O /usr/bin/skt-sshws "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/skt-sshws.sh" && chmod +x /usr/bin/skt-sshws
-wget -q -O /usr/bin/skt-running "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/skt-running.sh" && chmod +x /usr/bin/skt-running
-wget -q -O /usr/bin/skt-cekservice "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/skt-cekservice.sh" && chmod +x /usr/bin/skt-cekservice
+wget -q -O /usr/bin/system "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/system.sh" && chmod +x /usr/bin/system
+wget -q -O /usr/bin/sshws "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/sshws.sh" && chmod +x /usr/bin/sshws
+wget -q -O /usr/bin/running "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/running.sh" && chmod +x /usr/bin/running
+wget -q -O /usr/bin/cekservice "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/cekservice.sh" && chmod +x /usr/bin/cekservice
 wget -q -O /usr/bin/m-update "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/m-update.sh" && chmod +x /usr/bin/m-update
 wget -q -O /usr/bin/tendang "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/tendang.sh" && chmod +x /usr/bin/tendang
-wget -q -O /usr/bin/skt-check-port "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/skt-check-port.sh" && chmod +x /usr/bin/skt-check-port
+wget -q -O /usr/bin/check-port "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/check-port.sh" && chmod +x /usr/bin/check-port
 
-wget -q -O /usr/bin/skt-menu-backup "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/skt-menu-backup.sh" && chmod +x /usr/bin/skt-menu-backup
-wget -q -O /usr/bin/skt-auto-backup "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/skt-auto-backup.sh" && chmod +x /usr/bin/skt-auto-backup
-wget -q -O /usr/bin/skt-auto-restore "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/skt-auto-restore.sh" && chmod +x /usr/bin/skt-auto-restore
-wget -q -O /usr/bin/skt-manual-backup "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/skt-manual-backup.sh" && chmod +x /usr/bin/skt-manual-backup
-wget -q -O /usr/bin/skt-manual-restore "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/skt-manual-restore.sh" && chmod +x /usr/bin/skt-manual-restore
+wget -q -O /usr/bin/menu-backup "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/menu-backup.sh" && chmod +x /usr/bin/menu-backup
+wget -q -O /usr/bin/auto-backup "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/auto-backup.sh" && chmod +x /usr/bin/auto-backup
+wget -q -O /usr/bin/auto-restore "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/auto-restore.sh" && chmod +x /usr/bin/auto-restore
+wget -q -O /usr/bin/manual-backup "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/manual-backup.sh" && chmod +x /usr/bin/manual-backup
+wget -q -O /usr/bin/manual-restore "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/manual-restore.sh" && chmod +x /usr/bin/manual-restore
 
 wget -q -O /usr/bin/xraylimit "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/xraylimit.sh" && chmod +x /usr/bin/xraylimit
 wget -q -O /usr/bin/trialvmess "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialvmess.sh" && chmod +x /usr/bin/trialvmess
