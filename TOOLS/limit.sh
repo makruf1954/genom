@@ -1,10 +1,10 @@
 #!/bin/bash
-REPO="https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/"
+REPO="https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/"
 
-wget -q -O /etc/systemd/system/limitvmess.service "${REPO}SKT-Tools/limitvmess.service" && chmod +x limitvmess.service >/dev/null 2>&1
-wget -q -O /etc/systemd/system/limitvless.service "${REPO}SKT-Tools/limitvless.service" && chmod +x limitvless.service >/dev/null 2>&1
-wget -q -O /etc/systemd/system/limittrojan.service "${REPO}SKT-Tools/limittrojan.service" && chmod +x limittrojan.service >/dev/null 2>&1
-wget -q -O /etc/systemd/system/limitshadowsocks.service "${REPO}SKT-Tools/limitshadowsocks.service" && chmod +x limitshadowsocks.service >/dev/null 2>&1
+wget -q -O /etc/systemd/system/limitvmess.service "${REPO}TOOLS/limitvmess.service" && chmod +x limitvmess.service >/dev/null 2>&1
+wget -q -O /etc/systemd/system/limitvless.service "${REPO}TOOLS/limitvless.service" && chmod +x limitvless.service >/dev/null 2>&1
+wget -q -O /etc/systemd/system/limittrojan.service "${REPO}TOOLS/limittrojan.service" && chmod +x limittrojan.service >/dev/null 2>&1
+wget -q -O /etc/systemd/system/limitshadowsocks.service "${REPO}TOOLS/limitshadowsocks.service" && chmod +x limitshadowsocks.service >/dev/null 2>&1
 wget -q -O /etc/xray/limit.vmess "${REPO}bin/vmess" >/dev/null 2>&1
 wget -q -O /etc/xray/limit.vless "${REPO}bin/vless" >/dev/null 2>&1
 wget -q -O /etc/xray/limit.trojan "${REPO}bin/trojan" >/dev/null 2>&1
