@@ -468,7 +468,7 @@ if [ ! -f "/etc/log-create-user.log" ]; then
 echo "Log All Account " > /etc/log-create-user.log
 fi
 history -c
-serverV=$( curl -sS https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/TOOLS/skt-versi )
+serverV=$( curl -sS https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/TOOLS/versi )
 echo "$serverV" > /opt/.ver
 aureb=$(cat /home/re_otm) # Baris ini sekarang aman karena file dipastikan ada
 b=11
