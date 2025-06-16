@@ -632,7 +632,7 @@ echo -e "${GREEN}Memperbarui sistem dan menginstal dependensi...${NC}"
 
 apt update -y && apt upgrade -y
 
-apt install git curl python3 python3-pip apt-transport-https ca-certificates software-properties-common wget netcat-openbsd ncurses-bin -y
+apt install git curl python3 python3-pip apt-transport-https ca-certificates chrony software-properties-common wget netcat-openbsd ncurses-bin -y
 
 
 
@@ -664,7 +664,7 @@ res3() {
 
     echo -e "${GREEN}   Memulai instalasi SSH WS / OpenVPN...${NC}" # Pesan tambahan untuk kejelasan
 
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/SYSTEM/ssh-vpn.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/ssh-vpn.sh
 
     chmod +x ssh-vpn.sh
 
@@ -680,7 +680,7 @@ res4() {
 
     echo -e "${GREEN}   Memulai instalasi XRAY...${NC}"
 
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/SYSEM/ins-xray.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/ins-xray.sh
 
     chmod +x ins-xray.sh
 
@@ -696,7 +696,7 @@ res5() {
 
     echo -e "${GREEN}   Memulai instalasi WEBSOCKET SSH...${NC}"
 
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/WEBSOCKET/insshws.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/WEBSOCKET/insshws.sh
 
     chmod +x insshws.sh
 
@@ -712,7 +712,7 @@ res6() {
 
     echo -e "${GREEN}   Memulai instalasi BACKUP MENU...${NC}"
 
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/SYSTEM/set-br.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/set-br.sh
 
     chmod +x set-br.sh
 
@@ -728,7 +728,7 @@ res7() {
 
     echo -e "${GREEN}   Memulai instalasi OHP...${NC}"
 
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/WEBSOCKET/ohp.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/WEBSOCKET/ohp.sh
 
     chmod +x ohp.sh
 
@@ -744,7 +744,7 @@ res8() {
 
     echo -e "${GREEN}   Memulai pengunduhan EXTRA MENU...${NC}"
 
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/menu/update.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/update.sh
 
     chmod +x update.sh
 
@@ -760,7 +760,7 @@ res9() {
 
     echo -e "${GREEN}   Memulai pengunduhan SLOWDNS...${NC}"
 
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/SYSTEM/slowdns.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/slowdns.sh
 
     chmod +x slowdns.sh
 
@@ -776,7 +776,7 @@ res10() {
 
     echo -e "${GREEN}   Memulai pengunduhan UDP CUSTOM...${NC}"
 
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/SYSTEM/udp-custom.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/udp-custom.sh
 
     chmod +x udp-custom.sh
 
@@ -966,7 +966,7 @@ fi
 
 history -c
 
-serverV=$( curl -sS https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/TOOLS/versi )
+serverV=$( curl -sS https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/TOOLS/versi )
 
 echo "$serverV" > /opt/.ver
 
