@@ -1,1153 +1,566 @@
 #!/bin/bash
+# Script Installer
+# Dibuat oleh: HokageLegend9999
 
-# Install dependencies
-
-
-
-##############################################################################
-
-
-
-BIBlack='\033[1;90m'      # Black
-
-BIRed='\033[1;91m'        # Red
-
-BIGreen='\033[1;92m'      # Green
-
-BIYellow='\033[1;93m'     # Yellow
-
-BIBlue='\033[1;94m'       # Blue
-
-BIPurple='\033[1;95m'     # Purple
-
-BICyan='\033[1;96m'       # Cyan
-
-BIWhite='\033[1;97m'      # White
-
-UWhite='\033[4;37m'       # White
-
-On_IPurple='\033[0;105m'  #
-
-On_IRed='\033[0;101m'
-
-IBlack='\033[0;90m'        # Black
-
-IRed='\033[0;91m'          # Red
-
-IGreen='\033[0;92m'        # Green
-
-IYellow='\033[0;93m'       # Yellow
-
-IBlue='\033[0;94m'         # Blue
-
-IPurple='\033[0;95m'       # Purple
-
-ICyan='\033[0;96m'         # Cyan
-
-IWhite='\033[0;97m'        # White
-
-BGCOLOR='\e[1;97;101m'    # WHITE RED
-
-red='\e[1;31m'
-
-green='\e[0;32m'
-
-yell='\e[1;33m'
-
-tyblue='\e[1;36m'
-
-NC='\e[0m'
-
-
-
-##############################################################################
-
-
-
-GREEN='\033[0;32m'
-
-CYAN='\033[0;36m'
-
+# --- Definisi Warna ---
 NC='\033[0m' # No Color
+BIBlack='\033[1;90m'
+BIRed='\033[1;91m'
+BIGreen='\033[1;92m'
+BIYellow='\033[1;93m'
+BIBlue='\033[1;94m'
+BIPurple='\033[1;95m'
+BICyan='\033[1;96m'
+BIWhite='\033[1;97m'
+UWhite='\033[4;37m'
+On_IPurple='\033[0;105m'
+On_IRed='\033[0;101m'
+IBlack='\033[0;90m'
+IRed='\033[0;91m'
+IGreen='\033[0;92m'
+IYellow='\033[0;93m'
+IBlue='\033[0;94m'
+IPurple='\033[0;95m'
+ICyan='\033[0;96m'
+IWhite='\033[0;97m'
+BGCOLOR='\e[1;97;101m' # WHITE RED
 
+# Definisi warna singkat (jika diperlukan, untuk konsistensi)
+red='\e[1;31m'
+green='\e[0;32m'
+yell='\e[1;33m'
+tyblue='\e[1;36m'
+# GREEN dan CYAN sudah didefinisikan di atas, jadi tidak perlu duplikasi.
 export PINK='\033[0;35m'
-
 export YELLOW='\033[0;33m'
 
+# --- Fungsi Warna Teks ---
+purple() { echo -e "\033[35;1m${*}\033[0m"; }
+tyblue() { echo -e "\033[36;1m${*}\033[0m"; }
+yellow() { echo -e "\033[33;1m${*}\033[0m"; }
+green() { echo -e "\033[32;1m${*}\033[0m"; }
+red() { echo -e "\033[31;1m${*}\033[0m"; }
 
-
-echo -e "${GREEN}♻️Check Validasi Masuk...${NC}"
-
+# --- Validasi Awal ---
+echo -e "${GREEN}♻️ Check Validasi Masuk...${NC}"
 sleep 3
+clear
 
-clear 
-
-
-
+# Pastikan direktori yang dibutuhkan ada
 mkdir -p /etc/data
 
-
-
-# Mendapatkan IP publik pengguna
-
-# PERBAIKAN: Menggunakan curl untuk mendapatkan IP publik yang akurat
-
+# --- Mendapatkan IP Publik Pengguna ---
 user_ip=$(curl -s https://ipinfo.io/ip)
 
-
-
-# Meminta nama client dan memvalidasi
-
+# --- Meminta Nama Client dan Memvalidasi ---
 while true; do
+    read -rp $'\033[0;32mMasukkan Nama Client:\033[0m ' client_name
 
-    read -rp $'\033[0;32mMasukkan Nama Client:\033[0m ' client_name
+    # Validasi Nama Client
+    if [[ -z "$client_name" ]]; then
+        echo "Nama Client tidak boleh kosong. Silakan masukkan kembali."
+        continue
+    elif [[ ! "$client_name" =~ ^[A-Za-z]+$ ]]; then
+        echo "Nama Client hanya boleh berisi huruf. Silakan masukkan kembali."
+        continue
+    fi
 
+    # Menggunakan curl untuk memeriksa apakah client_name ada dalam file permission.txt
+    permission_file=$(curl -s https://raw.githubusercontent.com/hokagelegend9999/genom/main/izin.txt)
+    
+    # Mengambil IP_VPS juga untuk validasi di izin.txt
+    IP_VPS=$(curl -s https://ipinfo.io/ip) # Pastikan ini mengambil IP publik
 
+    if echo "$permission_file" | grep -q -i "$client_name" && echo "$permission_file" | grep -q "$IP_VPS"; then
+        # Mengambil tanggal kedaluwarsa dari kolom ke-3
+        exp_date=$(echo "$permission_file" | grep -i "$client_name" | awk '{print $3}')
+        
+        # Validasi format tanggal
+        if ! [[ "$exp_date" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]]; then
+            echo -e "${red}❌ Format tanggal invalid: '$exp_date' (harus YYYY-MM-DD)${NC}"
+            exit 1
+        fi
 
-    # Validasi Nama Client (misalnya tidak kosong dan hanya huruf)
+        # Validasi tanggal menggunakan date
+        if ! date -d "$exp_date" "+%s" &>/dev/null; then
+            echo -e "${red}❌ Tanggal tidak valid secara kalender: $exp_date${NC}"
+            exit 1
+        fi
 
-    if [[ -z "$client_name" ]]; then
-
-        echo "Nama Client tidak boleh kosong. Silakan masukkan kembali."
-
-        continue
-
-    elif [[ ! "$client_name" =~ ^[A-Za-z]+$ ]]; then
-
-        echo "Nama Client hanya boleh berisi huruf. Silakan masukkan kembali."
-
-        continue
-
-    fi
-
-
-
-    # Menggunakan curl untuk memeriksa apakah client_name ada dalam file permission.txt
-
-    # PERBAIKAN: Menggunakan URL raw.githubusercontent.com yang benar
-
-    permission_file=$(curl -s https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/izin.txt)
-
-    
-
-    # PERBAIKAN: Mengambil IP_VPS juga untuk validasi di izin.txt
-
-    IP_VPS=$(curl -s https://ipinfo.io/ip) # Pastikan ini mengambil IP publik
-
-
-
-    if echo "$permission_file" | grep -q -i "$client_name" && echo "$permission_file" | grep -q "$IP_VPS"; then
-
-        # PERBAIKAN: Mengambil tanggal kedaluwarsa dari kolom ke-3 (bukan ke-4)
-
-        exp_date=$(echo "$permission_file" | grep -i "$client_name" | awk '{print $3}')
-
-        
-
-        # Validasi format tanggal
-
-        if ! [[ "$exp_date" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]]; then
-
-            echo -e "${RED}❌ Format tanggal invalid: '$exp_date' (harusYYYY-MM-DD)${NC}"
-
-            exit 1
-
-        fi
-
-
-
-        # Validasi tanggal menggunakan date
-
-        if ! date -d "$exp_date" "+%s" &>/dev/null; then
-
-            echo -e "${RED}❌ Tanggal tidak valid secara kalender: $exp_date${NC}"
-
-            exit 1
-
-        fi
-
-
-
-        echo "Client Name accepted... Let's go..."
-
-        break
-
-    else
-
-        echo -e "${RED}❌ Client Name atau IP ($IP_VPS) tidak terdaftar!${NC}"
-
-        echo -e "➥ Hubungi admin ${CYAN}「 ✦ @HokageLegend ✦ 」${NC}"
-
-        rm -f /root/home # Ganti dengan path yang sesuai ke file installer
-
-        exit 1
-
-    fi
-
+        echo "Client Name accepted... Let's go..."
+        break
+    else
+        echo -e "${red}❌ Client Name atau IP ($IP_VPS) tidak terdaftar!${NC}"
+        echo -e "➥ Hubungi admin ${CYAN}「 ✦ @HokageLegend ✦ 」${NC}"
+        # Hapus file installer jika validasi gagal
+        rm -f /root/home 
+        exit 1
+    fi
 done
-
-
 
 echo -e "${GREEN}Sedang Melanjutkan proses...${NC}"
-
 sleep 2
-
-
 
 echo -e "${GREEN}Mengunduh dan menginstal dependensi...${NC}"
-
 sleep 2
 
-
-
 clear
 
-
-
-# Telegram Bot API details
-
+# --- Detail API Bot Telegram ---
 TOKEN="7911375235:AAERwknqnWLoqWFbsSuUfqCQGMy93UQHUTk"
-
 CHAT_ID="1469244768"
 
-
-
-# Function to send message to Telegram
-
+# --- Fungsi untuk Mengirim Pesan ke Telegram ---
 send_telegram_message() {
+    MESSAGE=$1
+    BUTTON1_URL="https://t.me/hokagelegend1"
+    BUTTON2_URL="https://wa.me/087726917005"
+    BUTTON_TEXT1="Telegram 😎"
+    BUTTON_TEXT2="Whatsapp 🐳"
 
-    MESSAGE=$1
+    RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendMessage" \
+        -d chat_id="$CHAT_ID" \
+        -d parse_mode="MarkdownV2" \
+        -d text="$MESSAGE" \
+        -d reply_markup='{
+                "inline_keyboard": [
+                    [{"text": "'"$BUTTON_TEXT1"'", "url": "'"$BUTTON1_URL"'"}, {"text": "'"$BUTTON_TEXT2"'", "url": "'"$BUTTON2_URL"'"}]
+                ]
+            }')
 
-    BUTTON1_URL="https://t.me/hokagelegend1"
-
-    BUTTON2_URL="https://wa.me/087726917005"
-
-    BUTTON_TEXT1="Telegram 😎"
-
-    BUTTON_TEXT2="Whatsapp 🐳"
-
-
-
-    RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendMessage" \
-
-        -d chat_id="$CHAT_ID" \
-
-        -d parse_mode="MarkdownV2" \
-
-        -d text="$MESSAGE" \
-
-    -d reply_markup='{
-
-            "inline_keyboard": [
-
-                [{"text": "'"$BUTTON_TEXT1"'", "url": "'"$BUTTON1_URL"'"}, {"text": "'"$BUTTON2_TEXT2"'", "url": "'"$BUTTON2_URL"'"}]
-
-            ]
-
-        }')
-
-
-
-    # Print the response using jq to pretty-print
-
-    echo "$RESPONSE" | jq .
-
+    # Cetak respons menggunakan jq untuk pretty-print
+    #echo "$RESPONSE" | jq .
 }
 
-
-
-##############################################################################
-
-
-
-# Fungsi warna teks
-
-purple()  { echo -e "\033[35;1m${*}\033[0m"; }
-
-tyblue()  { echo -e "\033[36;1m${*}\033[0m"; }
-
-yellow()  { echo -e "\033[33;1m${*}\033[0m"; }
-
-green()   { echo -e "\033[32;1m${*}\033[0m"; }
-
-red()     { echo -e "\033[31;1m${*}\033[0m"; }
-
-
-
-# Validasi root access
-
+# --- Validasi Root Access ---
 if [[ "${EUID}" -ne 0 ]]; then
-
-    red "Script harus dijalankan sebagai user root!"
-
-    exit 1
-
+    red "Script harus dijalankan sebagai user root!"
+    exit 1
 fi
 
-
-
-# Validasi virtualisasi
-
+# --- Validasi Virtualisasi ---
 if [[ "$(systemd-detect-virt)" == "openvz" ]]; then
-
-    red "OpenVZ tidak didukung!"
-
-    exit 1
-
+    red "OpenVZ tidak didukung!"
+    exit 1
 fi
 
-
-
-# Konfigurasi hostname
-
+# --- Konfigurasi Hostname ---
 cd /root || exit 1
-
 local_ip=$(hostname -I | cut -d' ' -f1)
-
 host_name=$(hostname)
 
-
-
 # Perbaiki file hosts jika diperlukan
-
 if ! grep -q "^${local_ip} ${host_name}" /etc/hosts; then
-
-    echo "${local_ip} ${host_name}" >> /etc/hosts
-
+    echo "${local_ip} ${host_name}" >> /etc/hosts
 fi
 
-
-
-# Fungsi konversi waktu
-
+# --- Fungsi Konversi Waktu ---
 secs_to_human() {
-
-    local jam=$(( $1 / 3600 ))
-
-    local menit=$(( ($1 % 3600) / 60 ))
-
-    local detik=$(( $1 % 60 ))
-
-    echo "Waktu instalasi: ${jam} jam ${menit} menit ${detik} detik"
-
+    local jam=$(( $1 / 3600 ))
+    local menit=$(( ($1 % 3600) / 60 ))
+    local detik=$(( $1 % 60 ))
+    echo "Waktu instalasi: ${jam} jam ${menit} menit ${detik} detik"
 }
 
-
-
-##############################################################################
-
-
-
+# --- Persiapan Direktori ---
 rm -rf /etc/phreakers
-
 mkdir -p /etc/phreakers
-
 mkdir -p /etc/phreakers/theme
-
 mkdir -p /var/lib/ >/dev/null 2>&1
-
 echo "IP=" >> /var/lib/ipvps.conf
-
 clear
 
+# --- Input Nama Pengguna ---
 echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-
-echo -e "${BIBlue}│ ${BGCOLOR}      MASUKKAN NAMA KAMU             ${NC}${BIBlue} │${NC}"
-
+echo -e "${BIBlue}│ ${BGCOLOR}      MASUKKAN NAMA KAMU           ${NC}${BIBlue} │${NC}"
 echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
 echo " "
-
 until [[ $name =~ ^[a-zA-Z0-9_.-]+$ ]]; do
-
-read -rp "Masukan Nama Kamu Disini tanpa spasi : " -e name
-
+    read -rp "Masukan Nama Kamu Disini tanpa spasi : " -e name
 done
-
 rm -rf /etc/profil
-
 echo "$name" > /etc/profil
-
 echo ""
-
 clear
-
 author=$(cat /etc/profil)
-
+echo ""
 echo ""
 
-echo ""
-
-
-
-# HAPUS FUNGSI FUN_BAR KARENA ANDA INGIN OUTPUT TERLIHAT LANGSUNG
-
-# SAYA HANYA MENINGGALKAN BAGIAN FUN_BAR YANG DIPANGGIL UNTUK "Update Domain"
-
-# JIKA ANDA INGIN FUN_BAR INI HILANG JUGA, MAKA KELUARKAN KODE INI DARI SINI
-
-# DAN GANTI PANGGILAN fun_bar DI BAWAH DENGAN echo dan sleep biasa.
-
-
-
+# --- Fungsi Bar Progres (fun_bar) ---
 fun_bar() {
-
-    CMD[0]="$1"
-
-    CMD[1]="$2"
-
-    (
-
-        [[ -e $HOME/fim ]] && rm $HOME/fim
-
-        ${CMD[0]} -y >/dev/null 2>&1
-
-        ${CMD[1]} -y >/dev/null 2>&1
-
-        touch $HOME/fim
-
-    ) >/dev/null 2>&1 &
-
-    tput civis
-
-    echo -ne "  \033[0;33mUpdate Domain.. \033[1;37m- \033[0;33m["
-
-    while true; do
-
-        for ((i = 0; i < 18; i++)); do
-
-            echo -ne "\033[0;32m#"
-
-            sleep 0.1s
-
-        done
-
-        [[ -e $HOME/fim ]] && rm $HOME/fim && break
-
-        echo -e "\033[0;33m]"
-
-        sleep 1s
-
-        tput cuu1
-
-        tput dl1
-
-        echo -ne "  \033[0;33mUpdate Domain... \033[1;37m- \033[0;33m["
-
-    done
-
-    echo -e "\033[0;33m]\033[1;37m -\033[1;32m Succes !\033[1;37m"
-
-    tput cnorm
-
+    CMD[0]="$1"
+    CMD[1]="$2"
+    (
+        [[ -e $HOME/fim ]] && rm $HOME/fim
+        ${CMD[0]} -y >/dev/null 2>&1
+        ${CMD[1]} -y >/dev/null 2>&1
+        touch $HOME/fim
+    ) >/dev/null 2>&1 &
+    tput civis
+    echo -ne "  \033[0;33mUpdate Domain.. \033[1;37m- \033[0;33m["
+    while true; do
+        for ((i = 0; i < 18; i++)); do
+            echo -ne "\033[0;32m#"
+            sleep 0.1s
+        done
+        [[ -e $HOME/fim ]] && rm $HOME/fim && break
+        echo -e "\033[0;33m]"
+        sleep 1s
+        tput cuu1
+        tput dl1
+        echo -ne "  \033[0;33mUpdate Domain... \033[1;37m- \033[0;33m["
+    done
+    echo -e "\033[0;33m]\033[1;37m -\033[1;32m Succes !\033[1;37m"
+    tput cnorm
 }
 
-
-
 clear
-
 cd
 
+# --- Pilihan Domain ---
 echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-
 echo -e "${BIBlue}│ \033[1;37mPlease select a your Choice to Set Domain${BIBlue}│${NC}"
-
 echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
 echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-
-echo -e "${BIBlue}│  [ 1 ]  \033[1;37mDomain Kamu Sendiri & Domain SlowDNS Kamu Sendiri     ${NC}"
-
+echo -e "${BIBlue}│  [ 1 ]  \033[1;37mDomain Kamu Sendiri & Domain SlowDNS Kamu Sendiri     ${NC}"
 echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
-until [[ $domain =~ ^1$ ]]; do 
-
-read -p "    Please select number 1 : " domain
-
+until [[ $domain =~ ^1$ ]]; do
+    read -p "    Please select number 1 : " domain
 done
-
-
 
 if [[ $domain == "1" ]]; then
-
-clear
-
-
-
-echo " "
-
-until [[ $dns1 =~ ^[a-zA-Z0-9_.-]+$ ]]; do 
-
-echo -e "${BIBlue}══════════════════════════════════════════${NC}"
-
-read -rp "Masukan domain kamu Disini : " -e dns1
-
-
-
-done
-
-echo ""
-
-mkdir -p /etc/xray
-
-mkdir -p /etc/v2ray
-
-touch /etc/xray/domain
-
-touch /etc/v2ray/domain
-
-echo "$dns1" > /etc/xray/domain
-
-echo "$dns1" > /etc/v2ray/domain
-
-echo "IP=$dns1" > /var/lib/ipvps.conf
-
-clear
-
-echo " "
-
-until [[ $dns2 =~ ^[a-zA-Z0-9_.-]+$ ]]; do
-
-echo -e "${BIBlue}══════════════════════════════════════════${NC}"
-
-read -rp "Masukan Domain SlowDNS kamu Disini : " -e dns2
-
-done
-
-mkdir -p /etc/xray
-
-touch /etc/xray/nsdomain
-
-echo "$dns2" > /etc/xray/nsdomain
-
-echo "$dns2" >/etc/xray/dns
-
+    clear
+    echo " "
+    until [[ $dns1 =~ ^[a-zA-Z0-9_.-]+$ ]]; do
+        echo -e "${BIBlue}══════════════════════════════════════════${NC}"
+        read -rp "Masukan domain kamu Disini : " -e dns1
+    done
+    echo ""
+    mkdir -p /etc/xray
+    mkdir -p /etc/v2ray
+    touch /etc/xray/domain
+    touch /etc/v2ray/domain
+    echo "$dns1" > /etc/xray/domain
+    echo "$dns1" > /etc/v2ray/domain
+    echo "IP=$dns1" > /var/lib/ipvps.conf
+    clear
+    echo " "
+    until [[ $dns2 =~ ^[a-zA-Z0-9_.-]+$ ]]; do
+        echo -e "${BIBlue}══════════════════════════════════════════${NC}"
+        read -rp "Masukan Domain SlowDNS kamu Disini : " -e dns2
+    done
+    mkdir -p /etc/xray
+    touch /etc/xray/nsdomain
+    echo "$dns2" > /etc/xray/nsdomain
+    echo "$dns2" >/etc/xray/dns
 fi
 
-
-
-
-
-##############################################################################
-
-
-
-# Daftar tema warna
-
+# --- Daftar Tema Warna ---
 declare -A themes=(
-
-  [red]=$'\E[40;1;41m:\033[0;31m'
-
-  [green]=$'\E[40;1;42m:\033[0;32m'
-
-  [yellow]=$'\E[40;1;43m:\033[0;33m'
-
-  [blue]=$'\E[40;1;44m:\033[0;34m'
-
-  [magenta]=$'\E[40;1;95m:\033[0;95m'
-
-  [cyan]=$'\E[40;1;46m:\033[0;36m'
-
+    [red]=$'\E[40;1;41m:\033[0;31m'
+    [green]=$'\E[40;1;42m:\033[0;32m'
+    [yellow]=$'\E[40;1;43m:\033[0;33m'
+    [blue]=$'\E[40;1;44m:\033[0;34m'
+    [magenta]=$'\E[40;1;95m:\033[0;95m'
+    [cyan]=$'\E[40;1;46m:\033[0;36m'
 )
 
-
-
 # Membuat file konfigurasi tema
-
 for color in "${!themes[@]}"; do
-
-  IFS=':' read -r bg text <<< "${themes[$color]}"
-
-  cat << EOF > "/etc/phreakers/theme/${color}"
-
+    IFS=':' read -r bg text <<< "${themes[$color]}"
+    cat << EOF > "/etc/phreakers/theme/${color}"
 BG : ${bg}
-
 TEXT : ${text}
-
 EOF
-
 done
 
-
-
 # Set tema default ke cyan
-
 echo "cyan" > /etc/phreakers/theme/color.conf
 
-
-
-##############################################################################
-
-
-
-# Disable IPv6
-
+# --- Disable IPv6 ---
 echo -e "${GREEN}Mematikan IPv6...${NC}"
-
 sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1
-
 sysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null 2>&1
-
 echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-
 echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
-
 sysctl -p >/dev/null 2>&1
 
-
-
-# Disable AppArmor (Ubuntu 24.04)
-
+# --- Disable AppArmor (Ubuntu 24.04) ---
 echo -e "${GREEN}Mematikan AppArmor...${NC}"
-
 systemctl disable --now apparmor >/dev/null 2>&1
-
 systemctl stop apparmor >/dev/null 2>&1
-
 update-rc.d -f apparmor remove >/dev/null 2>&1 # Ini mungkin tidak ada di semua sistem, tapi aman.
-
 apt-get purge apparmor apparmor-utils -y >/dev/null 2>&1
 
-
-
 clear
 
-wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/TOOLS/tools.sh &> /dev/null
-
-chmod +x tools.sh 
-
+# --- Instalasi Tools Awal ---
+wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/TOOLS/tools.sh &> /dev/null
+chmod +x tools.sh
 bash tools.sh
-
 start=$(date +%s)
-
 ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
-
-
-# Update dan instal dependensi umum untuk Ubuntu 24.04
-
+# --- Update dan Instal Dependensi Umum untuk Ubuntu 24.04 ---
 echo -e "${GREEN}Memperbarui sistem dan menginstal dependensi...${NC}"
-
-# PERBAIKAN: Mengganti 'netcat' dengan 'netcat-openbsd' dan 'ncurses-utils' dengan 'ncurses-bin'
-
 apt update -y && apt upgrade -y
-
-apt install git curl python3 python3-pip apt-transport-https ca-certificates chrony software-properties-common wget netcat-openbsd ncurses-bin -y
-
-
-
-##############################################################################
-
-
+apt install git curl python3 python3-pip apt-transport-https ca-certificates software-properties-common wget netcat-openbsd ncurses-bin -y
 
 cd
-
+clear
+wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/TOOLS/limit.sh && chmod +x limit.sh && ./limit.sh
 clear
 
-wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main//TOOLS/limit.sh && chmod +x limit.sh && ./limit.sh
-
-clear
-
-
-
-##############################################################################
-
-
-
-##############################################################################
-
-
-
-# Fungsi asli untuk instalasi modul - outputnya akan terlihat langsung
-
+# --- Fungsi Instalasi Modul ---
 res3() {
-
-    echo -e "${GREEN}   Memulai instalasi SSH WS / OpenVPN...${NC}" # Pesan tambahan untuk kejelasan
-
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/ssh-vpn.sh
-
-    chmod +x ssh-vpn.sh
-
-    ./ssh-vpn.sh
-
-    clear
-
+    echo -e "${GREEN}    Memulai instalasi SSH WS / OpenVPN...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/SYSTEM/ssh-vpn.sh -O ssh-vpn.sh
+    chmod +x ssh-vpn.sh
+    ./ssh-vpn.sh
+    clear
 }
-
-
 
 res4() {
-
-    echo -e "${GREEN}   Memulai instalasi XRAY...${NC}"
-
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/ins-xray.sh
-
-    chmod +x ins-xray.sh
-
-    ./ins-xray.sh
-
-    clear
-
+    echo -e "${GREEN}    Memulai instalasi XRAY...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/SYSTEM/ins-xray.sh -O ins-xray.sh
+    chmod +x ins-xray.sh
+    ./ins-xray.sh
+    clear
 }
-
-
 
 res5() {
-
-    echo -e "${GREEN}   Memulai instalasi WEBSOCKET SSH...${NC}"
-
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/WEBSOCKET/insshws.sh
-
-    chmod +x insshws.sh
-
-    ./insshws.sh
-
-    clear
-
+    echo -e "${GREEN}    Memulai instalasi WEBSOCKET SSH...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/WEBSOCKET/insshws.sh -O insshws.sh
+    chmod +x insshws.sh
+    ./insshws.sh
+    clear
 }
-
-
 
 res6() {
-
-    echo -e "${GREEN}   Memulai instalasi BACKUP MENU...${NC}"
-
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/set-br.sh
-
-    chmod +x set-br.sh
-
-    ./set-br.sh
-
-    clear
-
+    echo -e "${GREEN}    Memulai instalasi BACKUP MENU...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/SYSTEM/set-br.sh -O set-br.sh
+    chmod +x set-br.sh
+    ./set-br.sh
+    clear
 }
-
-
 
 res7() {
-
-    echo -e "${GREEN}   Memulai instalasi OHP...${NC}"
-
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/WEBSOCKET/ohp.sh
-
-    chmod +x ohp.sh
-
-    ./ohp.sh
-
-    clear
-
+    echo -e "${GREEN}    Memulai instalasi OHP...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/WEBSOCKET/ohp.sh -O ohp.sh
+    chmod +x ohp.sh
+    ./ohp.sh
+    clear
 }
-
-
 
 res8() {
-
-    echo -e "${GREEN}   Memulai pengunduhan EXTRA MENU...${NC}"
-
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/update.sh
-
-    chmod +x update.sh
-
-    ./update.sh
-
-    clear
-
+    echo -e "${GREEN}    Memulai pengunduhan EXTRA MENU...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/main/menu/update.sh -O update.sh
+    chmod +x update.sh
+    ./update.sh
+    clear
 }
-
-
 
 res9() {
-
-    echo -e "${GREEN}   Memulai pengunduhan SLOWDNS...${NC}"
-
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/slowdns.sh
-
-    chmod +x slowdns.sh
-
-    ./slowdns.sh
-
-    clear
-
+    echo -e "${GREEN}    Memulai pengunduhan SLOWDNS...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/SYSTEM/slowdns.sh -O slowdns.sh
+    chmod +x slowdns.sh
+    ./slowdns.sh
+    clear
 }
 
-
-
 res10() {
-
-    echo -e "${GREEN}   Memulai pengunduhan UDP CUSTOM...${NC}"
-
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/udp-custom.sh
-
-    chmod +x udp-custom.sh
-
-    bash udp-custom.sh # Menggunakan bash karena skrip aslinya menggunakan bash di sini
-
-    clear
-
+    echo -e "${GREEN}    Memulai pengunduhan UDP CUSTOM...${NC}"
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/SYSTEM/udp-custom.sh -O udp-custom.sh
+    chmod +x udp-custom.sh
+    bash udp-custom.sh
+    clear
 }
 
 res11() {
-
-sudo sed -i 's/^[[:space:]]*#*DROPBEAR_EXTRA_ARGS=.*/DROPBEAR_EXTRA_ARGS="-p 50000 -p 109"/' /etc/default/dropbear
-
-sudo sed -i 's/^#DROPBEAR_PORT=.*/DROPBEAR_PORT=149/' /etc/default/dropbear
-
-sudo mkdir -p /etc/dropbear/
-
-sudo dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
-
-sudo dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
-
-sudo chmod 600 /etc/dropbear/dropbear_dss_host_key
-
-sudo chmod 600 /etc/dropbear/dropbear_rsa_host_key
-
-sudo chown root:root /etc/dropbear/dropbear_dss_host_key
-
-sudo chown root:root /etc/dropbear/dropbear_rsa_host_key
-
-sudo systemctl daemon-reload
-
-sudo systemctl restart dropbear
-
-    clear
-
+    echo -e "${GREEN}    Mengkonfigurasi Dropbear...${NC}"
+    sudo sed -i 's/^[[:space:]]*#*DROPBEAR_EXTRA_ARGS=.*/DROPBEAR_EXTRA_ARGS="-p 50000 -p 109"/' /etc/default/dropbear
+    sudo sed -i 's/^#DROPBEAR_PORT=.*/DROPBEAR_PORT=149/' /etc/default/dropbear
+    sudo mkdir -p /etc/dropbear/
+    sudo dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+    sudo dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+    sudo chmod 600 /etc/dropbear/dropbear_dss_host_key
+    sudo chmod 600 /etc/dropbear/dropbear_rsa_host_key
+    sudo chown root:root /etc/dropbear/dropbear_dss_host_key
+    sudo chown root:root /etc/dropbear/dropbear_rsa_host_key
+    sudo systemctl daemon-reload
+    sudo systemctl restart dropbear
+    clear
 }
 
-
-
-# Bagian pemanggilan fungsi di SKT4100
-
-# LANGSUNG PANGGIL FUNGSI RESX UNTUK MELIHAT OUTPUTNYA
-
+# --- Proses Instalasi SKT4100 ---
 function SKT4100(){
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}    PROCESS INSTALLED SSH WS / OPENVPN    ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res3
 
-    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}        PROCESS INSTALLED XRAY          ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res4
 
-    echo -e "${BIBlue}│ ${BGCOLOR}      PROCESS INSTALLED SSH WS / OPENVPN    ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}    PROCESS INSTALLED WEBSOCKET SSH   ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res5
 
-    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}    PROCESS INSTALLED BACKUP MENU     ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res6
 
-    res3
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}        PROCESS INSTALLED OHP         ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res7
 
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}        DOWNLOAD EXTRA MENU           ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res8
 
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}        DOWNLOAD SLOWDNS              ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res9
 
-    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-
-    echo -e "${BIBlue}│ ${BGCOLOR}        PROCESS INSTALLED XRAY          ${NC}${BIBlue} │${NC}"
-
-    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
-    res4
-
-
-
-    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-
-    echo -e "${BIBlue}│ ${BGCOLOR}      PROCESS INSTALLED WEBSOCKET SSH   ${NC}${BIBlue} │${NC}"
-
-    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
-    res5
-
-
-
-    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-
-    echo -e "${BIBlue}│ ${BGCOLOR}      PROCESS INSTALLED BACKUP MENU     ${NC}${BIBlue} │${NC}"
-
-    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
-    res6
-
-
-
-    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-
-    echo -e "${BIBlue}│ ${BGCOLOR}        PROCESS INSTALLED OHP           ${NC}${BIBlue} │${NC}"
-
-    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
-    res7
-
-
-
-    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-
-    echo -e "${BIBlue}│ ${BGCOLOR}        DOWNLOAD EXTRA MENU             ${NC}${BIBlue} │${NC}"
-
-    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
-    res8
-
-
-
-    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-
-    echo -e "${BIBlue}│ ${BGCOLOR}        DOWNLOAD SLOWDNS                ${NC}${BIBlue} │${NC}"
-
-    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
-    res9
-
-
-
-    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
-
-    echo -e "${BIBlue}│ ${BGCOLOR}        DOWNLOAD UDP COSTUM             ${NC}${BIBlue} │${NC}"
-
-    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
-
-    res10
-
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}        DOWNLOAD UDP COSTUM           ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res10
+    
+    echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
+    echo -e "${BIBlue}│ ${BGCOLOR}    CONFIGURING DROPBEAR              ${NC}${BIBlue} │${NC}"
+    echo -e "${BIBlue}╰══════════════════════════════════════════╯${NC}"
+    res11
 }
-
 SKT4100 # Memanggil fungsi SKT4100
 
-
-
-##############################################################################
-
-
-
-##############################################################################
-
-
-
-# PERBAIKAN: Pastikan file /home/re_otm ada dan berikan nilai default jika tidak
-
+# --- Konfigurasi Post-Instalasi ---
+# Pastikan file /home/re_otm ada dan berikan nilai default jika tidak
 if [ ! -f "/home/re_otm" ]; then
-
-    echo "0" > /home/re_otm
-
+    echo "0" > /home/re_otm
 fi
 
-
-
-cat> /root/.profile << END
-
+cat > /root/.profile << END
 if [ "$BASH" ]; then
-
 if [ -f ~/.bashrc ]; then
-
 . ~/.bashrc
-
 fi
-
 fi
-
 mesg n || true
-
 clear
-
 menu
-
 END
-
 chmod 644 /root/.profile
 
+# Bersihkan file log instalasi sebelumnya
 if [ -f "/root/log-install.txt" ]; then
-
-rm /root/log-install.txt > /dev/null 2>&1
-
+    rm /root/log-install.txt > /dev/null 2>&1
 fi
-
 if [ -f "/etc/afak.conf" ]; then
-
-rm /etc/afak.conf > /dev/null 2>&1
-
+    rm /etc/afak.conf > /dev/null 2>&1
 fi
-
 if [ ! -f "/etc/log-create-user.log" ]; then
-
-echo "Log All Account " > /etc/log-create-user.log
-
+    echo "Log All Account " > /etc/log-create-user.log
 fi
-
 history -c
 
-serverV=$( curl -sS https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/TOOLS/versi )
-
+serverV=$( curl -sS https://raw.githubusercontent.com/hokagelegend9999/genom/main/TOOLS/versi )
 echo "$serverV" > /opt/.ver
 
-aureb=$(cat /home/re_otm) # Baris ini sekarang aman karena file dipastikan ada
-
+aureb=$(cat /home/re_otm)
 b=11
-
-if [ "$aureb" -gt "$b" ]
-
-then
-
-gg="PM"
-
+if [ "$aureb" -gt "$b" ]; then
+    gg="PM"
 else
-
-gg="AM"
-
+    gg="AM"
 fi
-
 cd
 
-
-
-##############################################################################
-
-
-
+# --- Pengambilan Info Server & Pembersihan File ---
 curl -sS ifconfig.me > /etc/myipvps
-
 curl -s ipinfo.io/city?token=75082b4831f909 >> /etc/xray/city
-
 curl -s ipinfo.io/org?token=75082b4831f909 | cut -d " " -f 2-10 >> /etc/xray/isp
-
 rm /root/setup.sh >/dev/null 2>&1
-
 rm /root/slhost.sh >/dev/null 2>&1
-
 rm /root/ssh-vpn.sh >/dev/null 2>&1
-
 rm /root/ins-xray.sh >/dev/null 2>&1
-
 rm /root/insshws.sh >/dev/null 2>&1
-
 rm /root/set-br.sh >/dev/null 2>&1
-
 rm /root/ohp.sh >/dev/null 2>&1
-
 rm /root/update.sh >/dev/null 2>&1
-
 rm /root/slowdns.sh >/dev/null 2>&1
-
 rm /root/udp-custom.sh >/dev/null 2>&1 # Hapus file udp-custom.sh setelah digunakan
 
+# --- Pembuatan Direktori Bot dan Limit ---
 rm -rf /etc/bot
-
 mkdir -p /etc/bot
-
 mkdir -p /etc/sf/limit/vmess/ip
-
 mkdir -p /etc/limit/vmess
-
 mkdir -p /etc/vmess/limit/ip
-
 mkdir -p /etc/limit/vless
-
 mkdir -p /etc/sf/limit/vless/ip
-
 mkdir -p /etc/limit/trojan
-
 mkdir -p /etc/sf/limit/trojan/ip
-
 mkdir -p /etc/vmess
-
 mkdir -p /etc/vless
-
 mkdir -p /etc/trojan
-
 touch /etc/bot/.bot.db
-
 touch /etc/vmess/.vmess.db
 
+# --- Log Waktu Instalasi ---
 secs_to_human "$(($(date +%s) - ${start}))" | tee -a log-install.txt
-
 sleep 3
-
-echo  ""
-
+echo ""
 cd
 
-
-
-##############################################################################
-
-
-
-# Send success message to Telegram
-
+# --- Kirim Pesan Sukses ke Telegram ---
 IPVPS=$(curl -s https://ipinfo.io/ip)
-
 HOSTNAME=$(hostname)
-
 OS=$(lsb_release -d | awk '{print $2,$3,$4}')
-
 ISP=$(curl -s https://ipinfo.io/org | awk '{print $2,$3,$4}')
-
-REGION=$(curl -s https://ipinfo.io/region)
-
+REGION=$(curl -s ipinfo.io/region)
 DATE=$(date '+%Y-%m-%d')
-
 TIME=$(date '+%H:%M:%S')
-
 DOMAIN=$(cat /etc/xray/domain)
 
-
-
-
-
 MESSAGE="\`\`\`
-
 ❏━━━━━━━━━━━━━━━━━❏
-
 🤖 Hokage Store Project 🤖
-
 ❏━━━━━━━━━━━━━━━━━❏
-
-❖ Status      : Active
-
-❖ Status SC   : Admin Access
-
-❖ Linux OS    : $OS
-
-❖ ISP         : $ISP
-
-❖ IP VPS      : $IPVPS
-
-❖ Area ISP    : $REGION
-
-❖ Waktu       : $TIME
-
-❖ Tanggal     : $DATE
-
-❖ Domain      : $DOMAIN
-
+❖ Status        : Active
+❖ Status SC     : Admin Access
+❖ Linux OS      : $OS
+❖ ISP           : $ISP
+❖ IP VPS        : $IPVPS
+❖ Area ISP      : $REGION
+❖ Waktu         : $TIME
+❖ Tanggal       : $DATE
+❖ Domain        : $DOMAIN
 ❏━━━━━━━━***************━━━━━━━━━❏
-
 👑 Dev https://t.me/hokagelegend1 👑
-
 ❏━━━━━━━******************━━━━━━━━❏
-
 \`\`\`"
 
-
-
 send_telegram_message "$MESSAGE"
-
 clear
-
 sleep 2
 
-
-
+# --- Selesai Instalasi dan Reboot ---
 echo -e "${BIBlue}════════════════════════════════════════${NC}"
-
 echo -e "${BIBlue} Script telah berhasil di install"
-
 rm -rf *
-
 rm /root/home
-
 echo -e ""
-
-echo -e "[\e[1;31mWARNING\e[0m] Reboot sekali biar ga error lur [default y](y/n)? "
-
-read answer
-
-if [ "$answer" == "${answer#[Yy]}" ] ;then
-
-exit 0
-
+read -rp "[\e[1;31mWARNING\e[0m] Reboot sekali biar ga error lur [default y](y/n)? " -e answer
+if [[ "$answer" =~ ^[Nn]$ ]]; then
+    exit 0
 else
-
-cat /dev/null > ~/.bash_history && history -c && reboot
-
+    cat /dev/null > ~/.bash_history && history -c && reboot
 fi
