@@ -354,7 +354,7 @@ res7() {
 
 res8() {
     echo -e "${GREEN}    Memulai pengunduhan EXTRA MENU...${NC}"
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/main/menu/update.sh -O update.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/main/update.sh -O update.sh
     chmod +x update.sh
     ./update.sh
     clear
