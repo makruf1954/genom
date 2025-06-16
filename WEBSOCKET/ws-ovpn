@@ -1,18 +1,37 @@
-#!/usr/bin/python
-import socket, threading, thread, select, signal, sys, time, getopt
+#!/usr/bin/python3
+import socket, threading, select, signal, sys, time, getopt
 
 # Listen
 LISTENING_ADDR = '0.0.0.0'
-LISTENING_PORT = sys.argv[1]
+if sys.argv[1:]:
+    LISTENING_PORT = sys.argv[1]
+else:
+    LISTENING_PORT = 700 # Default port if not provided
 
-# Pass
+# Pass (assuming this is for some internal auth, if any)
 PASS = ''
 
 # CONST
 BUFLEN = 4096 * 4
 TIMEOUT = 60
-DEFAULT_HOST = '127.0.0.1:88'
-RESPONSE = 'HTTP/1.1 101 <b><font color="green">HOKAGE LEGEND YOUTUBE</font></b>\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: foo\r\n\r\n'
+DEFAULT_HOST = '127.0.0.1:109' # Default target for OpenVPN's internal connection
+
+# RESPONSE HTTP 101 Switching Protocols (Updated for Python 3 and removed old text)
+RESPONSE = 'HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: foo\r\n\r\n'.encode('latin-1')
+
+# CUSTOM MESSAGE YANG AKAN DIKIRIM SETELAH HANDSHAKE WEBSOCKET
+CUSTOM_STARTUP_MESSAGE = """\
+HOKAGE LEGEND STORE
+═══════⊹⊱✫⊰⊹══════
+✅ 1 LOGIN DEVICE !!!
+✅ NO DDOS !!!
+✅ NO HACKING !!!
+✅ NO MULTILOGIN !!!
+✅ NO PORN18+ !!!
+═══════⊹⊱✫⊰⊹══════ ➪
+Trial/Order Hubungi : ➪ WhatsApp : https://wa.me/087726917005
+➪ HOKAGE PREMIUM
+""".encode('utf-8')
 
 class Server(threading.Thread):
     def __init__(self, host, port):
@@ -50,7 +69,7 @@ class Server(threading.Thread):
 
     def printLog(self, log):
         self.logLock.acquire()
-        print log
+        print(log) # Python 3 print function
         self.logLock.release()
 
     def addConn(self, conn):
@@ -86,7 +105,7 @@ class ConnectionHandler(threading.Thread):
         self.clientClosed = False
         self.targetClosed = True
         self.client = socClient
-        self.client_buffer = ''
+        self.client_buffer = b'' # Initialize as bytes for Python 3
         self.server = server
         self.log = 'Connection: ' + str(addr)
 
@@ -113,35 +132,39 @@ class ConnectionHandler(threading.Thread):
         try:
             self.client_buffer = self.client.recv(BUFLEN)
 
-            hostPort = self.findHeader(self.client_buffer, 'X-Real-Host')
+            # Decode bytes to string for header parsing in Python 3
+            client_buffer_str = self.client_buffer.decode('latin-1')
+
+            hostPort = self.findHeader(client_buffer_str, 'X-Real-Host')
 
             if hostPort == '':
                 hostPort = DEFAULT_HOST
 
-            split = self.findHeader(self.client_buffer, 'X-Split')
+            split = self.findHeader(client_buffer_str, 'X-Split')
 
             if split != '':
                 self.client.recv(BUFLEN)
 
             if hostPort != '':
-                passwd = self.findHeader(self.client_buffer, 'X-Pass')
-				
+                passwd = self.findHeader(client_buffer_str, 'X-Pass')
+
                 if len(PASS) != 0 and passwd == PASS:
                     self.method_CONNECT(hostPort)
                 elif len(PASS) != 0 and passwd != PASS:
-                    self.client.send('HTTP/1.1 400 WrongPass!\r\n\r\n')
+                    self.client.send('HTTP/1.1 400 WrongPass!\r\n\r\n'.encode('latin-1')) # .encode() for Python 3
                 elif hostPort.startswith('127.0.0.1') or hostPort.startswith('localhost'):
                     self.method_CONNECT(hostPort)
                 else:
-                    self.client.send('HTTP/1.1 403 Forbidden!\r\n\r\n')
+                    print('- No X-Real-Host!') # Python 3 print function
+                    self.client.send('HTTP/1.1 403 Forbidden!\r\n\r\n'.encode('latin-1')) # .encode() for Python 3
             else:
-                print '- No X-Real-Host!'
-                self.client.send('HTTP/1.1 400 NoXRealHost!\r\n\r\n')
+                print('- No X-Real-Host!') # Python 3 print function
+                self.client.send('HTTP/1.1 400 NoXRealHost!\r\n\r\n'.encode('latin-1')) # .encode() for Python 3
 
         except Exception as e:
-            self.log += ' - error: ' + e.strerror
+            self.log += ' - error: ' + str(e) # Python 3 exception handling
             self.server.printLog(self.log)
-	    pass
+            pass
         finally:
             self.close()
             self.server.removeConn(self)
@@ -167,10 +190,10 @@ class ConnectionHandler(threading.Thread):
             port = int(host[i+1:])
             host = host[:i]
         else:
-            if self.method=='CONNECT':
+            if hasattr(self, 'method') and self.method=='CONNECT': # Added hasattr for safety
                 port = 443
             else:
-                port = sys.argv[1]
+                port = int(sys.argv[1]) # Ensure port is integer
 
         (soc_family, soc_type, proto, _, address) = socket.getaddrinfo(host, port)[0]
 
@@ -182,8 +205,12 @@ class ConnectionHandler(threading.Thread):
         self.log += ' - CONNECT ' + path
 
         self.connect_target(path)
-        self.client.sendall(RESPONSE)
-        self.client_buffer = ''
+        self.client.sendall(RESPONSE) # RESPONSE is already encoded above
+        self.client_buffer = b'' # Ensure buffer is bytes for Python 3
+
+        # --- KODE UNTUK MENGIRIM PESAN KUSTOM ANDA ---
+        self.client.sendall(CUSTOM_STARTUP_MESSAGE) # CUSTOM_STARTUP_MESSAGE is already encoded above
+        # --- AKHIR KODE PESAN KUSTOM ---
 
         self.server.printLog(self.log)
         self.doCONNECT()
@@ -199,20 +226,20 @@ class ConnectionHandler(threading.Thread):
                 error = True
             if recv:
                 for in_ in recv:
-		    try:
+                    try:
                         data = in_.recv(BUFLEN)
                         if data:
-			    if in_ is self.target:
-				self.client.send(data)
+                            if in_ is self.target:
+                                self.client.send(data)
                             else:
                                 while data:
                                     byte = self.target.send(data)
                                     data = data[byte:]
 
                             count = 0
-			else:
-			    break
-		    except:
+                        else:
+                            break
+                    except Exception as e: # Catch specific exception type (Python 3)
                         error = True
                         break
             if count == TIMEOUT:
@@ -222,14 +249,14 @@ class ConnectionHandler(threading.Thread):
 
 
 def print_usage():
-    print 'Usage: proxy.py -p <port>'
-    print '       proxy.py -b <bindAddr> -p <port>'
-    print '       proxy.py -b 0.0.0.0 -p 80'
+    print('Usage: proxy.py -p <port>') # Python 3 print function
+    print('         proxy.py -b <bindAddr> -p <port>') # Python 3 print function
+    print('         proxy.py -b 0.0.0.0 -p 80') # Python 3 print function
 
 def parse_args(argv):
     global LISTENING_ADDR
     global LISTENING_PORT
-    
+
     try:
         opts, args = getopt.getopt(argv,"hb:p:",["bind=","port="])
     except getopt.GetoptError:
@@ -246,20 +273,19 @@ def parse_args(argv):
 
 
 def main(host=LISTENING_ADDR, port=LISTENING_PORT):
-    print "\n:-------PythonProxy-------:\n"
-    print "Listening addr: " + LISTENING_ADDR
-    print "Listening port: " + str(LISTENING_PORT) + "\n"
-    print ":-------------------------:\n"
+    print("\n:-------PythonProxy-------:\n") # Python 3 print function
+    print("Listening addr: " + LISTENING_ADDR) # Python 3 print function
+    print("Listening port: " + str(LISTENING_PORT) + "\n") # Python 3 print function
+    print(":-------------------------:\n") # Python 3 print function
     server = Server(LISTENING_ADDR, LISTENING_PORT)
     server.start()
     while True:
         try:
             time.sleep(2)
         except KeyboardInterrupt:
-            print 'Stopping...'
+            print('Stopping...') # Python 3 print function
             server.close()
             break
 
-#######    parse_args(sys.argv[1:])
 if __name__ == '__main__':
     main()
