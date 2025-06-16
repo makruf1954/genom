@@ -154,9 +154,9 @@ wget -O /home/vps/public_html/index.html "https://raw.githubusercontent.com/hoka
 cd
 wget -O /usr/sbin/badvpn "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/badvpn" >/dev/null 2>&1
 chmod +x /usr/sbin/badvpn > /dev/null 2>&1
-wget -q -O /etc/systemd/system/badvpn1.service "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/badvpn1.service" >/dev/null 2>&1
-wget -q -O /etc/systemd/system/badvpn2.service "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/badvpn2.service" >/dev/null 2>&1
-wget -q -O /etc/systemd/system/badvpn3.service "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/badvpn3.service" >/dev/null 2>&1
+wget -q -O /etc/systemd/system/badvpn1.service "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/badvpn1.service" >/dev/null 2>&1
+wget -q -O /etc/systemd/system/badvpn2.service "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/badvpn2.service" >/dev/null 2>&1
+wget -q -O /etc/systemd/system/badvpn3.service "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/badvpn3.service" >/dev/null 2>&1
 systemctl disable badvpn1 
 systemctl stop badvpn1 
 systemctl enable badvpn1
@@ -186,7 +186,7 @@ echo "=== Install Dropbear ==="
 # install dropbear
 apt -y install dropbear
 sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=143/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_PORT=149/DROPBEAR_PORT=143/g' /etc/default/dropbear
 sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 50000 -p 109 -p 110 -p 69"/g' /etc/default/dropbear
 echo "/bin/false" >> /etc/shells
 echo "/usr/sbin/nologin" >> /etc/shells
@@ -198,7 +198,7 @@ apt -y install squid3
 
 # install squid for debian 11
 apt -y install squid
-wget -O /etc/squid/squid.conf "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/proxy3.js"
+wget -O /etc/squid/squid.conf "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/proxy3.js"
 sed -i $MYIP2 /etc/squid/squid.conf
 
 # setting vnstat
@@ -257,10 +257,10 @@ sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
 /etc/init.d/stunnel4 restart
 
 #OpenVPN
-wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/vpn.sh &&  chmod +x vpn.sh && ./vpn.sh
+wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/vpn.sh &&  chmod +x vpn.sh && ./vpn.sh
 
 # // install lolcat
-wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/lolcat.sh &&  chmod +x lolcat.sh && ./lolcat.sh
+wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/lolcat.sh &&  chmod +x lolcat.sh && ./lolcat.sh
 
 # memory swap 1gb
 cd
@@ -306,10 +306,10 @@ echo "Banner /etc/issue.net" >>/etc/ssh/sshd_config
 sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/issue.net"@g' /etc/default/dropbear
 
 # Ganti Banner
-wget -O /etc/issue.net "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/issue.net"
+wget -O /etc/issue.net "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/issue.net"
 
 #install bbr dan optimasi kernel
-wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/bbr.sh && chmod +x bbr.sh && ./bbr.sh
+wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/bbr.sh && chmod +x bbr.sh && ./bbr.sh
 
 # blokir torrent
 iptables -A FORWARD -m string --string "get_peers" --algo bm -j DROP
@@ -333,10 +333,10 @@ netfilter-persistent reload
 
 # download script
 cd /usr/bin
-wget -O issue "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/issue.net"
+wget -O issue "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/issue.net"
 wget -O m-theme "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/m-theme.sh"
-wget -O speedtest "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/speedtest_cli.py"
-wget -O xp "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTTEM/xp.sh"
+wget -O speedtest "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/speedtest_cli.py"
+wget -O xp "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/xp.sh"
 
 chmod +x issue
 chmod +x m-theme
