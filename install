@@ -295,7 +295,7 @@ apt-get purge apparmor apparmor-utils -y >/dev/null 2>&1
 clear
 
 # --- Instalasi Tools Awal ---
-wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/TOOLS/tools.sh &> /dev/null
+wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/TOOLS/tools.sh -O tools.sh &> /dev/null
 chmod +x tools.sh
 bash tools.sh
 start=$(date +%s)
@@ -308,7 +308,7 @@ apt install git curl python3 python3-pip apt-transport-https ca-certificates sof
 
 cd
 clear
-wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/TOOLS/limit.sh && chmod +x limit.sh && ./limit.sh
+wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/TOOLS/limit.sh -O limit.sh && chmod +x limit.sh && ./limit.sh
 clear
 
 # --- Fungsi Instalasi Modul ---
@@ -354,7 +354,7 @@ res7() {
 
 res8() {
     echo -e "${GREEN}    Memulai pengunduhan EXTRA MENU...${NC}"
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/main/update.sh -O update.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/main/menu/update.sh -O update.sh
     chmod +x update.sh
     ./update.sh
     clear
@@ -476,7 +476,8 @@ echo "$serverV" > /opt/.ver
 
 aureb=$(cat /home/re_otm)
 b=11
-if [ "$aureb" -gt "$b" ]; then
+if [ "$aureb" -gt "$b" ]
+then
     gg="PM"
 else
     gg="AM"
