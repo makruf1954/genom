@@ -391,10 +391,11 @@ res11() {
     sudo chown root:root /etc/dropbear/dropbear_rsa_host_key
     sudo systemctl daemon-reload
     sudo systemctl restart dropbear
+     sudo systemctl enable nginx
     clear
 }
 
-# --- Proses Instalasi SKT4100 ---
+# --- Proses Instalasi HOKAGE LEGEND ---
 function SKT4100(){
     echo -e "${BIBlue}╭══════════════════════════════════════════╮${NC}"
     echo -e "${BIBlue}│ ${BGCOLOR}    PROCESS INSTALLED SSH WS / OPENVPN    ${NC}${BIBlue} │${NC}"
