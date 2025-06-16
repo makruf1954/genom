@@ -331,7 +331,7 @@ clear
 # Fungsi asli untuk instalasi modul - outputnya akan terlihat langsung
 res3() {
     echo -e "${GREEN}   Memulai instalasi SSH WS / OpenVPN...${NC}" # Pesan tambahan untuk kejelasan
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/SYSTEM/ssh-vpn.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/ssh-vpn.sh
     chmod +x ssh-vpn.sh
     ./ssh-vpn.sh
     clear
@@ -339,7 +339,7 @@ res3() {
 
 res4() {
     echo -e "${GREEN}   Memulai instalasi XRAY...${NC}"
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/SYSEM/ins-xray.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSEM/ins-xray.sh
     chmod +x ins-xray.sh
     ./ins-xray.sh
     clear
@@ -347,7 +347,7 @@ res4() {
 
 res5() {
     echo -e "${GREEN}   Memulai instalasi WEBSOCKET SSH...${NC}"
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/WEBSOCKET/insshws.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/WEBSOCKET/insshws.sh
     chmod +x insshws.sh
     ./insshws.sh
     clear
@@ -355,7 +355,7 @@ res5() {
 
 res6() {
     echo -e "${GREEN}   Memulai instalasi BACKUP MENU...${NC}"
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/SYSTEM/set-br.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/set-br.sh
     chmod +x set-br.sh
     ./set-br.sh
     clear
@@ -363,7 +363,7 @@ res6() {
 
 res7() {
     echo -e "${GREEN}   Memulai instalasi OHP...${NC}"
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/WEBSOCKET/ohp.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/WEBSOCKET/ohp.sh
     chmod +x ohp.sh
     ./ohp.sh
     clear
@@ -371,7 +371,7 @@ res7() {
 
 res8() {
     echo -e "${GREEN}   Memulai pengunduhan EXTRA MENU...${NC}"
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/menu/update.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/update.sh
     chmod +x update.sh
     ./update.sh
     clear
@@ -379,7 +379,7 @@ res8() {
 
 res9() {
     echo -e "${GREEN}   Memulai pengunduhan SLOWDNS...${NC}"
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/SYSTEM/slowdns.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/slowdns.sh
     chmod +x slowdns.sh
     ./slowdns.sh
     clear
@@ -387,7 +387,7 @@ res9() {
 
 res10() {
     echo -e "${GREEN}   Memulai pengunduhan UDP CUSTOM...${NC}"
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/main/SYSTEM/udp-custom.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/udp-custom.sh
     chmod +x udp-custom.sh
     bash udp-custom.sh # Menggunakan bash karena skrip aslinya menggunakan bash di sini
     clear
