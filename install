@@ -321,7 +321,7 @@ apt install git curl python3 python3-pip apt-transport-https ca-certificates sof
 
 cd
 clear
-wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main//TOOLS/limit.sh && chmod +x limit.sh && ./limit.sh
+wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/TOOLS/limit.sh && chmod +x limit.sh && ./limit.sh
 clear
 
 ##############################################################################
@@ -339,7 +339,7 @@ res3() {
 
 res4() {
     echo -e "${GREEN}   Memulai instalasi XRAY...${NC}"
-    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSEM/ins-xray.sh
+    wget https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/ins-xray.sh
     chmod +x ins-xray.sh
     ./ins-xray.sh
     clear
@@ -402,8 +402,6 @@ sudo chmod 600 /etc/dropbear/dropbear_dss_host_key
 sudo chmod 600 /etc/dropbear/dropbear_rsa_host_key
 sudo chown root:root /etc/dropbear/dropbear_dss_host_key
 sudo chown root:root /etc/dropbear/dropbear_rsa_host_key
-sudo systemctl daemon-reload
-sudo systemctl restart dropbear
     clear
 }
 
@@ -495,7 +493,8 @@ fi
 cd
 
 ##############################################################################
-
+sudo systemctl daemon-reload
+sudo systemctl restart dropbear
 curl -sS ifconfig.me > /etc/myipvps
 curl -s ipinfo.io/city?token=75082b4831f909 >> /etc/xray/city
 curl -s ipinfo.io/org?token=75082b4831f909 | cut -d " " -f 2-10 >> /etc/xray/isp
