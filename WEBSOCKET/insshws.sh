@@ -26,10 +26,10 @@ Restart=on-failure
 WantedBy=multi-user.target
 END
 
-systemctl daemon-reload
-systemctl enable ws-dropbear.service
-systemctl start ws-dropbear.service
-systemctl restart ws-dropbear.service
+sudo systemctl status dropbear.service
+sudo systemctl restart dropbear.service
+sudo systemctl enable dropbear.service
+sudo systemctl restart ws-nontls.service
 
 wget -O /usr/local/bin/ws-ovpn https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/WEBSOCKET/ws-ovpn.py
 chmod +x /usr/local/bin/ws-ovpn
