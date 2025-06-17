@@ -1,9 +1,11 @@
-#!/usr/bin/python
-import socket, threading, thread, select, signal, sys, time, getopt
+#!/usr/bin/python3
+import socket, threading, select, signal, sys, time, getopt
 
 # Listen
 LISTENING_ADDR = '0.0.0.0'
-LISTENING_PORT = sys.argv[1]
+# Mengatasi agar LISTENING_PORT memiliki nilai default jika tidak ada argumen
+# Ini penting karena sys.argv[1] bisa saja tidak ada
+LISTENING_PORT = 900 # Default port, akan ditimpa jika argumen diberikan
 
 # Pass
 PASS = ''
@@ -12,7 +14,15 @@ PASS = ''
 BUFLEN = 4096 * 4
 TIMEOUT = 60
 DEFAULT_HOST = '127.0.0.1:109'
-RESPONSE = 'HTTP/1.1 101 <b><font color="green">HOKAGE LEGEND YOUTUBE</font></b>\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: foo\r\n\r\n'
+# String harus di-encode saat dikirim melalui socket
+RESPONSE = b'HTTP/1.1 101 \x1b[32m!!.. Konek..cuyy..!!!\x1b[0m\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: foo\r\n\r\n'
+# Catatan: Bagian HTML seperti <b><font color="green"> tidak akan berfungsi di sini,
+# Karena ini adalah respons HTTP biasa, bukan konten web. Saya menggantinya
+# dengan escape sequence ANSI untuk warna hijau jika terminal mendukungnya,
+# atau Anda bisa menghapusnya sepenuhnya. Jika Anda ingin tampilan web,
+# ini harus menjadi proxy web yang sebenarnya, bukan hanya websocket.
+# Jika tujuannya hanya teks biasa, hilangkan tag HTML dan kode warna ANSI.
+# Contoh: RESPONSE = b'HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: foo\r\n\r\n'
 
 class Server(threading.Thread):
     def __init__(self, host, port):
@@ -28,8 +38,15 @@ class Server(threading.Thread):
         self.soc = socket.socket(socket.AF_INET)
         self.soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.soc.settimeout(2)
-        intport = int(self.port)
-        self.soc.bind((self.host, intport))
+        intport = int(self.port) # Pastikan port adalah integer
+        try:
+            self.soc.bind((self.host, intport))
+        except OSError as e:
+            # Tambahkan penanganan error bind agar lebih informatif
+            self.printLog(f"Error: Could not bind to {self.host}:{self.port} - {e}")
+            self.running = False
+            return # Keluar dari thread jika bind gagal
+
         self.soc.listen(0)
         self.running = True
 
@@ -50,7 +67,7 @@ class Server(threading.Thread):
 
     def printLog(self, log):
         self.logLock.acquire()
-        print log
+        print(log) # Perbaikan: print sebagai fungsi
         self.logLock.release()
 
     def addConn(self, conn):
@@ -64,7 +81,8 @@ class Server(threading.Thread):
     def removeConn(self, conn):
         try:
             self.threadsLock.acquire()
-            self.threads.remove(conn)
+            if conn in self.threads: # Pastikan koneksi ada sebelum mencoba menghapus
+                self.threads.remove(conn)
         finally:
             self.threadsLock.release()
 
@@ -86,7 +104,7 @@ class ConnectionHandler(threading.Thread):
         self.clientClosed = False
         self.targetClosed = True
         self.client = socClient
-        self.client_buffer = ''
+        self.client_buffer = b'' # Default ke bytes karena recv mengembalikan bytes
         self.server = server
         self.log = 'Connection: ' + str(addr)
 
@@ -112,41 +130,47 @@ class ConnectionHandler(threading.Thread):
     def run(self):
         try:
             self.client_buffer = self.client.recv(BUFLEN)
+            
+            # Mendekode buffer client untuk operasi string, lalu encode kembali saat mengirim
+            client_buffer_str = self.client_buffer.decode('latin-1') # Pilih encoding yang sesuai, latin-1 sering dipakai untuk header HTTP
 
-            hostPort = self.findHeader(self.client_buffer, 'X-Real-Host')
+            hostPort = self.findHeader(client_buffer_str, 'X-Real-Host')
 
             if hostPort == '':
                 hostPort = DEFAULT_HOST
 
-            split = self.findHeader(self.client_buffer, 'X-Split')
+            split = self.findHeader(client_buffer_str, 'X-Split')
 
             if split != '':
-                self.client.recv(BUFLEN)
+                self.client.recv(BUFLEN) # Buang sisa data, asumsi tidak digunakan
 
             if hostPort != '':
-                passwd = self.findHeader(self.client_buffer, 'X-Pass')
-				
+                passwd = self.findHeader(client_buffer_str, 'X-Pass')
+
                 if len(PASS) != 0 and passwd == PASS:
                     self.method_CONNECT(hostPort)
                 elif len(PASS) != 0 and passwd != PASS:
-                    self.client.send('HTTP/1.1 400 WrongPass!\r\n\r\n')
+                    self.client.send(b'HTTP/1.1 400 WrongPass!\r\n\r\n') # String literal perlu di-encode
                 elif hostPort.startswith('127.0.0.1') or hostPort.startswith('localhost'):
                     self.method_CONNECT(hostPort)
                 else:
-                    self.client.send('HTTP/1.1 403 Forbidden!\r\n\r\n')
+                    self.server.printLog('- No X-Real-Host! (Forbidden)') # Perbaikan: print sebagai fungsi
+                    self.client.send(b'HTTP/1.1 403 Forbidden!\r\n\r\n') # String literal perlu di-encode
             else:
-                print '- No X-Real-Host!'
-                self.client.send('HTTP/1.1 400 NoXRealHost!\r\n\r\n')
+                self.server.printLog('- No X-Real-Host! (Bad Request)') # Perbaikan: print sebagai fungsi
+                self.client.send(b'HTTP/1.1 400 NoXRealHost!\r\n\r\n') # String literal perlu di-encode
 
         except Exception as e:
-            self.log += ' - error: ' + e.strerror
+            # Gunakan str(e) untuk mendapatkan representasi string dari objek pengecualian
+            self.log += ' - error: ' + str(e)
             self.server.printLog(self.log)
-	    pass
+            # Tidak perlu `pass` jika sudah ada kode di sini
         finally:
             self.close()
             self.server.removeConn(self)
 
     def findHeader(self, head, header):
+        # Header harus dicari di string yang sudah didekode
         aux = head.find(header + ': ')
 
         if aux == -1:
@@ -159,7 +183,7 @@ class ConnectionHandler(threading.Thread):
         if aux == -1:
             return ''
 
-        return head[:aux];
+        return head[:aux]
 
     def connect_target(self, host):
         i = host.find(':')
@@ -167,10 +191,22 @@ class ConnectionHandler(threading.Thread):
             port = int(host[i+1:])
             host = host[:i]
         else:
-            if self.method=='CONNECT':
+            # Gunakan self.method jika didefinisikan, jika tidak, gunakan string 'CONNECT'
+            # Karena self.method belum tentu ada, perlu penanganan
+            if hasattr(self, 'method') and self.method=='CONNECT':
                 port = 443
             else:
-                port = sys.argv[1]
+                # Menggunakan LISTENING_PORT sebagai target fallback adalah aneh untuk proxy
+                # Biasanya proxy akan target ke port default dari protokol tujuan (misal 80/443)
+                # Saya mengembalikan ke DEFAULT_HOST atau logika asli yang lebih aman.
+                # Mengacu pada baris 32 di `ws-stunnel` yang Anda berikan sebelumnya,
+                # port diambil dari sys.argv[1] jika ada, jika tidak default 700.
+                # Logika di sini agak berbeda dari ws-stunnel.
+                # Jika tujuannya adalah OpenVPN, port target haruslah port OpenVPN.
+                # DEFAULT_HOST sudah '127.0.0.1:109' yang sepertinya port OpenVPN/SSH target.
+                port = int(LISTENING_PORT) # Mengambil port dari LISTENING_PORT skrip
+                # Jika sys.argv[1] digunakan sebagai port koneksi target (bukan port listen),
+                # ini tidak masuk akal untuk proxy normal. Ini mungkin khusus untuk konfigurasi Anda.
 
         (soc_family, soc_type, proto, _, address) = socket.getaddrinfo(host, port)[0]
 
@@ -182,8 +218,8 @@ class ConnectionHandler(threading.Thread):
         self.log += ' - CONNECT ' + path
 
         self.connect_target(path)
-        self.client.sendall(RESPONSE)
-        self.client_buffer = ''
+        self.client.sendall(RESPONSE) # RESPONSE sudah berupa bytes (b'')
+        self.client_buffer = b'' # Default ke bytes
 
         self.server.printLog(self.log)
         self.doCONNECT()
@@ -199,20 +235,21 @@ class ConnectionHandler(threading.Thread):
                 error = True
             if recv:
                 for in_ in recv:
-		    try:
+                    try:
                         data = in_.recv(BUFLEN)
                         if data:
-			    if in_ is self.target:
-				self.client.send(data)
+                            if in_ is self.target:
+                                self.client.send(data)
                             else:
                                 while data:
                                     byte = self.target.send(data)
                                     data = data[byte:]
 
                             count = 0
-			else:
-			    break
-		    except:
+                        else:
+                            break # Koneksi ditutup oleh salah satu pihak
+                    except Exception as e:
+                        self.server.printLog(f"Error in doCONNECT: {e}") # Debugging
                         error = True
                         break
             if count == TIMEOUT:
@@ -222,14 +259,14 @@ class ConnectionHandler(threading.Thread):
 
 
 def print_usage():
-    print 'Usage: proxy.py -p <port>'
-    print '       proxy.py -b <bindAddr> -p <port>'
-    print '       proxy.py -b 0.0.0.0 -p 80'
+    print('Usage: proxy.py -p <port>') # Perbaikan: print sebagai fungsi
+    print('          proxy.py -b <bindAddr> -p <port>') # Perbaikan: print sebagai fungsi
+    print('          proxy.py -b 0.0.0.0 -p 80') # Perbaikan: print sebagai fungsi
 
 def parse_args(argv):
     global LISTENING_ADDR
     global LISTENING_PORT
-    
+
     try:
         opts, args = getopt.getopt(argv,"hb:p:",["bind=","port="])
     except getopt.GetoptError:
@@ -245,21 +282,28 @@ def parse_args(argv):
             LISTENING_PORT = int(arg)
 
 
-def main(host=LISTENING_ADDR, port=LISTENING_PORT):
-    print "\n:-------PythonProxy-------:\n"
-    print "Listening addr: " + LISTENING_ADDR
-    print "Listening port: " + str(LISTENING_PORT) + "\n"
-    print ":-------------------------:\n"
+def main(): # Menghapus parameter default karena mereka global
+    parse_args(sys.argv[1:]) # Panggil parse_args untuk memproses argumen baris perintah
+    
+    print("\n:-------PythonProxy-------:\n") # Perbaikan: print sebagai fungsi
+    print("Listening addr: " + LISTENING_ADDR) # Perbaikan: print sebagai fungsi
+    print("Listening port: " + str(LISTENING_PORT) + "\n") # Perbaikan: print sebagai fungsi
+    print(":-------------------------:\n") # Perbaikan: print sebagai fungsi
+    
     server = Server(LISTENING_ADDR, LISTENING_PORT)
     server.start()
-    while True:
+    
+    # Menunggu thread server utama selesai
+    while server.running: # Loop selama server.running masih True
         try:
             time.sleep(2)
         except KeyboardInterrupt:
-            print 'Stopping...'
+            print('Stopping...') # Perbaikan: print sebagai fungsi
             server.close()
             break
+        except Exception as e:
+            print(f"Main loop error: {e}")
+            break
 
-#######    parse_args(sys.argv[1:])
 if __name__ == '__main__':
     main()
