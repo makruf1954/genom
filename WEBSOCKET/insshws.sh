@@ -84,3 +84,5 @@ END
 systemctl enable ws-stunnel.service
 systemctl start ws-stunnel.service
 systemctl restart ws-stunnel.service
+sudo systemctl daemon-reload
+sudo systemctl restart ws-stunnel.service
