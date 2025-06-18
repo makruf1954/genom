@@ -33,10 +33,10 @@ clear
 read -p "  ➣ Your Choice: " NB
 case $NB in
       1) echo -e "${TEAL} ➣ Service Backup selected ${NC}"  
-         skt-manual-backup
+         manual-backup
          ;;
       2) echo -e "${TEAL} ➣ Service Restore selected ${NC}"  
-         skt-manual-restore
+         manual-restore
          ;;
       x) clear ; menu ;;
       *) phreakers-fitur ;;
