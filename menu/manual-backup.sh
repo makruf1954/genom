@@ -26,8 +26,8 @@ WHITE='\033[1;37m'
 
 # Fungsi untuk backup data manual
 clear
-source /etc/skt/token.json
-if [ -f "/etc/skt/token.json" ]; then
+source /etc/hokage/token.json
+if [ -f "/etc/hokage/token.json" ]; then
 rm -rf /root/backup
 mkdir /root/backup
 cp -r /etc/passwd /root/backup/ &> /dev/null
@@ -106,7 +106,7 @@ sleep 1
 echo "
 TOKEN="${token}"
 ID="${id}"
-" >/etc/skt/token.json
+" >/etc/hokage/token.json
 
 # Fungsi untuk mengaktifkan crontab
 enable_crontab() {
