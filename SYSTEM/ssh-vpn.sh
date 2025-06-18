@@ -194,8 +194,6 @@ echo "/usr/sbin/nologin" >> /etc/shells
 /etc/init.d/dropbear restart
 
 # // install squid for debian 9,10 & ubuntu 20.04
-apt -y install squid3
-
 # install squid for debian 11
 apt -y install squid
 wget -O /etc/squid/squid.conf "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/proxy3.js"
@@ -210,13 +208,11 @@ tar zxvf vnstat-2.6.tar.gz
 cd vnstat-2.6
 ./configure --prefix=/usr --sysconfdir=/etc && make && make install
 cd
-vnstat -u -i $NET
-sed -i 's/Interface "'""eth0""'"/Interface "'""$NET""'"/g' /etc/vnstat.conf
-chown vnstat:vnstat /var/lib/vnstat -R
-systemctl enable vnstat
-/etc/init.d/vnstat restart
-rm -f /root/vnstat-2.6.tar.gz
-rm -rf /root/vnstat-2.6
+NET=$(ip -o -4 route show to default | awk '{print $5}') && \
+sudo apt install -y vnstat && \
+sudo vnstat --addinterface $NET && \
+sudo sed -i "s/eth0/$NET/g" /etc/vnstat.conf && \
+sudo systemctl enable --now vnstat
 
 cd
 # install stunnel
