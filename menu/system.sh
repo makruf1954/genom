@@ -43,7 +43,7 @@ check_ip_and_get_info() {
 # =============================================
 
 # Ambil data dari GitHub dengan timeout
-permission_file=$(curl -s --connect-timeout 10 https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/izin.txt)
+permission_file=$(curl -s --connect-timeout 10 https://raw.githubusercontent.com/hokagelegend9999/ijin/refs/heads/main/gnome)
 
 # Validasi file permission
 if [ -z "$permission_file" ]; then
@@ -178,7 +178,7 @@ menu
 
 #===============================================================================#
 
-function skt-domain() {
+function domain() {
     # Konfigurasi warna
     COLOR1='\033[0;36m'
     NC='\033[0m'
@@ -204,7 +204,7 @@ function skt-domain() {
 
     # Fungsi instalasi slowdns
     install_slowdns() {
-        local script_url="https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/SKT-DnsTT/installsl.sh"
+        local script_url="https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SLOWDNS/installsl.sh"
         local output_file="installsl.sh"
         
         echo -e "${COLOR1}Mengunduh SlowDNS...${NC}"
@@ -289,7 +289,7 @@ clear
 
 #===============================================================================#
 
-function skt-certv2ray(){
+function certv2ray(){
 echo -e ""
 echo start
 sleep 0.5
@@ -302,7 +302,7 @@ systemctl stop $STOPWEBSERVER
 systemctl stop nginx
 curl https://acme-install.netlify.app/acme.sh -o /root/.acme.sh/acme.sh
 chmod +x /root/.acme.sh/acme.sh
-/root/.acme.sh/acme.sh --register-account -m skt@slowapp.cfd
+/root/.acme.sh/acme.sh --register-account -m hokage.cfd
 /root/.acme.sh/acme.sh --upgrade --auto-upgrade
 /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
 /root/.acme.sh/acme.sh --issue -d $domain --standalone -k ec-256
@@ -315,7 +315,7 @@ menu
 
 #===============================================================================#
 
-function skt-clearcache(){
+function clearcache(){
 clear
 echo ""
 echo ""
@@ -331,7 +331,7 @@ menu
 
 #===============================================================================#
 
-function skt-bot2(){
+function bot2(){
 clear
 echo -e "$COLOR1┌──────────────────────────────────────────┐${NC}"
 echo -e "$COLOR1     ${WH}Please select a Bot type below              ${NC}"
@@ -357,7 +357,7 @@ echo "$token3" > token
 read -rp "Enter Your Id (Creat on @userinfobot)  : " -e idat2
 echo "$idat2" > id
 sleep 1
-skt-bot2
+bot2
 fi
 if [[ $bot == "2" ]]; then
 clear
@@ -370,7 +370,7 @@ echo "$token23" > /usr/bin/token
 read -rp "Enter Your Id (Creat on @userinfobot)  : " -e idchat
 echo "$idchat" > /usr/bin/idchat
 sleep 1
-skt-bot2
+bot2
 fi
 menu
 }
@@ -392,7 +392,7 @@ fi
 
 #===============================================================================#
 
-function skt-coremenu(){
+function coremenu(){
 cd
 if [[ -e /usr/local/bin/modxray ]]; then
 echo -ne
@@ -454,16 +454,16 @@ echo -e " $COLOR1╚════════════════════
 echo -e ""
 echo -ne " ${WH}Select menu ${COLOR1}: ${WH}"; read opt
 case $opt in
-01 |1) clear ; skt-domain ;; 
+01 |1) clear ; domain ;; 
 02 |2) clear ; rm -rf /etc/issue.net && nano /etc/issue.net && chmod +x /etc/issue.net ; reboot;; 
-03 |3) clear ; skt-theme ;; 
-04 |4) clear ; skt-coremenu ;; 
-05 |5) clear ; skt-clearcache ;; 
-06 |6) clear ; skt-bot2 ;; 
-06 |7) clear ; skt-certv2ray ;; 
-07 |8) clear ; skt-gotopp ;; 
-09 |9) clear ; skt-check-port ;; 
-10 |10) clear ; wget -q https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/rebuildpepesmenu && bash rebuildpepesmenu ;; 
+03 |3) clear ; theme ;; 
+04 |4) clear ; coremenu ;; 
+05 |5) clear ; clearcache ;; 
+06 |6) clear ; bot2 ;; 
+06 |7) clear ; certv2ray ;; 
+07 |8) clear ; gotopp ;; 
+09 |9) clear ; check-port ;; 
+10 |10) clear ; wget -q https://github.com/hokagelegend9999/genom/raw/refs/heads/main/rebuildpepesmenu && bash rebuildpepesmenu ;; 
 00 |0) clear ; menu ;; 
-*) echo -e "" ; echo "Anda salah tekan" ; sleep 1 ; skt-system ;;
+*) echo -e "" ; echo "Anda salah tekan" ; sleep 1 ; system ;;
 esac
