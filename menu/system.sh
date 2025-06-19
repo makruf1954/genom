@@ -456,7 +456,7 @@ echo -ne " ${WH}Select menu ${COLOR1}: ${WH}"; read opt
 case $opt in
 01 |1) clear ; domain ;; 
 02 |2) clear ; rm -rf /etc/issue.net && nano /etc/issue.net && chmod +x /etc/issue.net ; reboot;; 
-03 |3) clear ; theme ;; 
+03 |3) clear ; m-theme ;; 
 04 |4) clear ; coremenu ;; 
 05 |5) clear ; clearcache ;; 
 06 |6) clear ; bot2 ;; 
