@@ -93,7 +93,7 @@ echo -e "${RED}     ❐ BOT TOKEN TIDAK TERSEDIA ❐${NC}"
 echo -e "${TEAL}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 sleep 1
 clear
-mkdir -p /etc/skt/
+mkdir -p /etc/hokage/
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${PURPLE}       ❐ MENU MANUAL BACKUP ❐ ${NC}"
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -115,7 +115,7 @@ enable_crontab() {
     clear
     read -p "$(echo -e " ❖${YELLOW} Aktifkan crontab setiap 24 Jam ? (y/N): ${NC}")" enable_crontab
     if [[ "$enable_crontab" =~ ^[Yy]$ ]]; then
-        (crontab -l 2>/dev/null; echo "0 */23 * * * /usr/bin/skt-manual-backup") | crontab -
+        (crontab -l 2>/dev/null; echo "0 */23 * * * /usr/bin/hokage-manual-backup") | crontab -
         echo -e " ❖${GREEN} Crontab telah diaktifkan.${NC}"
     else
         echo -e "${YELLOW}❖ Crontab tidak diaktifkan.${NC}"
