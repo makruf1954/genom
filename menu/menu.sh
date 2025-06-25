@@ -10,7 +10,7 @@ export YELLOW='\033[0;33m'
 export BLUE='\033[0;34m'
 export CYAN='\033[0;36m'
 export NC='\033[0m'
-
+export ORANGE='\033[0;91m'
 # =============================================
 #          [ Fungsi Pengecekan IP ]
 check_ip_and_get_info() {
@@ -337,7 +337,7 @@ clear
 clear && clear && clear
 clear;clear;clear
 echo -e "$COLOR1╭═══════════════════════════════════════════════════╮${NC}"
-echo -e "$COLOR1│${NC} ${COLBG1}         ${WH}• HOKAGE LEGEND PREMIUM •      ${NC} $COLOR1│ $NC"
+echo -e "$COLOR1│${NC} ${COLBG1}            ${WH}• HOKAGE LEGEND PREMIUM •            ${NC} $COLOR1│ $NC"
 echo -e "$COLOR1╰═══════════════════════════════════════════════════╯${NC}"
 echo -e "$COLOR1╭═══════════════════════════════════════════════════╮${NC}"
 echo -e "$COLOR1│ $NC${WH}❈ System OS          ${COLOR1}: ${WH}$MODEL2"
@@ -367,9 +367,10 @@ echo -e "$COLOR1│ ${WH}[${COLOR1}02${WH}]${NC} ${COLOR1}• ${WH}VMESS    ${WH
 echo -e "$COLOR1│ ${WH}[${COLOR1}03${WH}]${NC} ${COLOR1}• ${WH}VLESS    ${WH}[${COLOR1}Menu${WH}]     ${WH}[${COLOR1}08${WH}]${NC} ${COLOR1}• ${WH}REBOOT   ${WH}[${COLOR1}Menu${WH}]$COLOR1 │ $NC"
 echo -e "$COLOR1│ ${WH}[${COLOR1}04${WH}]${NC} ${COLOR1}• ${WH}TRJAN    ${WH}[${COLOR1}Menu${WH}]     ${WH}[${COLOR1}09${WH}]${NC} ${COLOR1}• ${WH}UPDATE   ${WH}[${COLOR1}Menu${WH}]$COLOR1 │ $NC"
 echo -e "$COLOR1│ ${WH}[${COLOR1}05${WH}]${NC} ${COLOR1}• ${WH}BACKUP   ${WH}[${COLOR1}Menu${WH}]     ${WH}[${COLOR1}10${WH}]${NC} ${COLOR1}• ${WH}SETTING  ${WH}[${COLOR1}Menu${WH}]$COLOR1 │ $NC"
+echo -e "$COLOR1│                                                   $COLOR1│ $NC"
 echo -e "${RED}╭═══════${ORANGE}══════ • ${YELLOW}CHECK USER ONLINE${GREEN} • ${CYAN}═══════════════╮${NC}"
-echo -e " ${YELLOW}        PILIH NOMOR 11 UNTUK MELIHAT USER ONLINE STATUS USER               ${NC}"
-echo -e "${CYAN}╰══════════════════════════════════════════════════════════════════╯${NC}"
+echo -e "${RED}│PILIH NOMOR${NC} ${YELLOW}[11] ${GREEN}🔍 MELIHAT USER ONLINE STATUS USER${NC}│ "
+echo -e "${CYAN}╰══${GREEN}==================${YELLOW}══=======${ORANGE}══════════════════════${RED}╯${NC}"
 echo -e "$COLOR1│                                                   $COLOR1│ $NC"
 echo -e "$COLOR1╰═══════════════════════════════════════════════════╯${NC}"
 echo -e "$COLOR1╭═══════════════════════════════════════════════════╮${NC}"
