@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Warna opsional
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+YELLOW="\033[1;33m"
+NC="\033[0m"
+
+log_file="/var/log/xray/access.log"
+userlist=$(grep '^#trg' /etc/xray/config.json | awk '{print $2}' | sort -u)
+
+echo -e "${YELLOW}┌────────────────────────────┐${NC}"
+echo -e "${YELLOW}│   CEK LIMIT IP TROJAN AKTIF │${NC}"
+echo -e "${YELLOW}└────────────────────────────┘${NC}"
+
+for user in $userlist; do
+    # Ambil semua IP dari log user
+    ips=$(grep "email: $user" $log_file | grep -oP 'from \K[0-9\.]+' | sort -u)
+
+    ip_total=$(echo "$ips" | wc -l)
+    ip_limit_file="/etc/trojan/${user}IP"
+
+    # Jika file limit IP tidak ada, anggap unlimited
+    if [[ -f $ip_limit_file ]]; then
+        ip_limit=$(cat "$ip_limit_file")
+    else
+        ip_limit="9999"
+    fi
+
+    # Cek apakah melebihi limit
+    if (( ip_total > ip_limit )); then
+        status="${RED}⚠️ MELAMPAUI LIMIT IP ($ip_total > $ip_limit)${NC}"
+    else
+        status="${GREEN}✅ AMAN ($ip_total / $ip_limit)${NC}"
+    fi
+
+    echo -e "USER       : $user"
+    echo -e "LOGIN IP   : $ip_total"
+    echo -e "BATAS IP   : $ip_limit"
+    echo -e "STATUS     : $status"
+    echo -e "-----------------------------"
+done
