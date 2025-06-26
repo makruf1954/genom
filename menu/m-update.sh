@@ -172,6 +172,7 @@ chmod +x vmess
 chmod +x insshws
 chmod +x trojan-online
 chmod +x ceklimit
+chmod +x online
 clear
 
 }
