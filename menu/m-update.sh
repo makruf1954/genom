@@ -120,6 +120,7 @@ wget -q -O /usr/bin/trialtrojan "https://raw.githubusercontent.com/hokagelegend9
 wget -q -O /usr/bin/trialssh "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialssh.sh" && chmod +x /usr/bin/trialssh
 wget -q -O /usr/bin/trial "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trial.sh" && chmod +x /usr/bin/trial
 wget -q -O /usr/bin/trojan-online "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trojan-online" && chmod +x /usr/bin/trojan-online
+wget -q -O /usr/bin/ceklimit "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/ceklimit" && chmod +x /usr/bin/ceklimit
 
 chmod +x m-tcp
 chmod +x m-theme
@@ -166,6 +167,7 @@ chmod +x vless
 chmod +x vmess
 chmod +x insshws
 chmod +x trojan-online
+chmod +x ceklimit
 clear
 
 }
