@@ -1,4 +1,4 @@
-#!/bin/bash
+imi#!/bin/bash
 DF='\e[39m'
 Bold='\e[1m'
 Blink='\e[5m'
@@ -60,7 +60,7 @@ read -p " Select menu :  "  opt
 echo -e   ""
 case $opt in
 01 | 1) clear ; trojan-online ;;
-02 | 2) clear ; restore ;;
-00 | 0) clear ; ceklimit ;;
-*) clear ; menu-backup ;;
+02 | 2) clear ; ceklimit ;;
+00 | 0) clear ; menu ;;
+*) clear ; online ;;
 esac
