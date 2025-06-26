@@ -119,6 +119,7 @@ wget -q -O /usr/bin/trialvless "https://raw.githubusercontent.com/hokagelegend99
 wget -q -O /usr/bin/trialtrojan "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialvless.sh" && chmod +x /usr/bin/trialvless
 wget -q -O /usr/bin/trialssh "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialssh.sh" && chmod +x /usr/bin/trialssh
 wget -q -O /usr/bin/trial "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trial.sh" && chmod +x /usr/bin/trial
+wget -q -O /usr/bin/trojan-online "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trojan-online" && chmod +x /usr/bin/trojan-online
 
 chmod +x m-tcp
 chmod +x m-theme
@@ -164,6 +165,7 @@ chmod +x trojan
 chmod +x vless
 chmod +x vmess
 chmod +x insshws
+chmod +x trojan-online
 clear
 
 }
