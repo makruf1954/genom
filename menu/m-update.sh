@@ -60,6 +60,9 @@ rm -rf trojan
 rm -rf vless
 rm -rf vmess
 rm -rf insshws
+rm -rf trojan-online
+rm -rf online
+rm -rf ceklimit
 
 fun_bar() {
     CMD[0]="$1"
@@ -121,6 +124,7 @@ wget -q -O /usr/bin/trialssh "https://raw.githubusercontent.com/hokagelegend9999
 wget -q -O /usr/bin/trial "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trial.sh" && chmod +x /usr/bin/trial
 wget -q -O /usr/bin/trojan-online "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trojan-online" && chmod +x /usr/bin/trojan-online
 wget -q -O /usr/bin/ceklimit "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/ceklimit" && chmod +x /usr/bin/ceklimit
+wget -q -O /usr/bin/online "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/online" && chmod +x /usr/bin/online
 
 chmod +x m-tcp
 chmod +x m-theme
