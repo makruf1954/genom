@@ -174,17 +174,12 @@ systemctl start badvpn3
 # setting port ssh
 cd
 sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-sed -i '/Port 22/a Port 500' /etc/ssh/sshd_config
-sed -i '/Port 22/a Port 40000' /etc/ssh/sshd_config
-sed -i '/Port 22/a Port 51443' /etc/ssh/sshd_config
-sed -i '/Port 22/a Port 58080' /etc/ssh/sshd_config
 sed -i '/Port 22/a Port 200' /etc/ssh/sshd_config
-sed -i '/Port 22/a Port 22' /etc/ssh/sshd_config
+
 /etc/init.d/ssh restart
 
 echo "=== Install Dropbear ==="
 # install dropbear
-apt -y install dropbear
 sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
 sed -i 's/DROPBEAR_PORT=149/DROPBEAR_PORT=143/g' /etc/default/dropbear
 # INI BARIS BARU YANG SUDAH DIMODIFIKASI
