@@ -126,6 +126,7 @@ wget -q -O /usr/bin/trialvless "https://raw.githubusercontent.com/hokagelegend99
 wget -q -O /usr/bin/trialtrojan "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialvless.sh" && chmod +x /usr/bin/trialvless
 wget -q -O /usr/bin/trialssh "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialssh.sh" && chmod +x /usr/bin/trialssh
 wget -q -O /usr/bin/trial "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trial.sh" && chmod +x /usr/bin/trial
+wget -q -O /usr/bin/online "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trial.sh" && chmod +x /usr/bin/online
 
 clear
 echo -e ""
