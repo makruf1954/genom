@@ -125,6 +125,7 @@ wget -q -O /usr/bin/trial "https://raw.githubusercontent.com/hokagelegend9999/ge
 wget -q -O /usr/bin/trojan-online "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trojan-online" && chmod +x /usr/bin/trojan-online
 wget -q -O /usr/bin/ceklimit "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/ceklimit" && chmod +x /usr/bin/ceklimit
 wget -q -O /usr/bin/online "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/online" && chmod +x /usr/bin/online
+wget -q -O /usr/bin/atur-backup " https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/atur-backup" && chmod +x /usr/bin/atur-backup
 
 chmod +x m-tcp
 chmod +x m-theme
