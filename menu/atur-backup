@@ -27,17 +27,28 @@ set_schedule() {
         return 1
     fi
 
-    read -p "Masukkan path lengkap ke skrip backup (cth: /root/manual-backup): " backup_script_path
+    read -p "Masukkan path lengkap ke skrip backup (cth: /root/manual-backup.sh): " backup_script_path
+
+    # Jika file belum ada, buat folder & file-nya
     if [ ! -f "$backup_script_path" ]; then
-        echo -e "${RED}Error: File skrip di '$backup_script_path' tidak ditemukan.${NC}"
-        return 1
+        echo -e "${YELLOW}File skrip di '$backup_script_path' tidak ditemukan.${NC}"
+        read -p "Ingin membuat file tersebut sekarang? (y/n): " confirm_create
+        if [[ "$confirm_create" =~ ^[Yy]$ ]]; then
+            folder_path=$(dirname "$backup_script_path")
+            mkdir -p "$folder_path"
+            echo -e "#!/bin/bash\n# Skrip backup otomatis\n\necho \"Backup dijalankan pada \$(date)\"" > "$backup_script_path"
+            chmod +x "$backup_script_path"
+            echo -e "${GREEN}File skrip '$backup_script_path' telah dibuat.${NC}"
+        else
+            echo -e "${RED}Operasi dibatalkan.${NC}"
+            return 1
+        fi
     fi
 
     # Membuat baris perintah cron baru
     local cron_command="$backup_minute $backup_hour * * * /bin/bash $backup_script_path"
 
     # Menghapus jadwal lama untuk skrip ini (jika ada) dan menambahkan yang baru
-    # Ini memastikan tidak ada duplikasi jadwal
     (crontab -l 2>/dev/null | grep -v "$backup_script_path" ; echo "$cron_command") | crontab -
 
     echo ""
@@ -63,14 +74,12 @@ disable_schedule() {
         return 1
     fi
 
-    # Memeriksa apakah jadwalnya ada sebelum mencoba menghapus
     crontab -l 2>/dev/null | grep -q "$backup_script_path"
     if [ $? -ne 0 ]; then
         echo -e "${YELLOW}Informasi: Jadwal untuk skrip '$backup_script_path' tidak ditemukan.${NC}"
         return 1
     fi
 
-    # Menghapus baris cron yang mengandung path skrip tersebut
     (crontab -l 2>/dev/null | grep -v "$backup_script_path") | crontab -
 
     echo ""
