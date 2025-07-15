@@ -65,6 +65,7 @@ rm -rf online
 rm -rf ceklimit
 rm -rf online-xray
 rm -rf online-trojan
+rm -rf atur-backup
 
 fun_bar() {
     CMD[0]="$1"
