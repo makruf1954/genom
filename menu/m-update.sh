@@ -66,6 +66,7 @@ rm -rf ceklimit
 rm -rf online-xray
 rm -rf online-trojan
 rm -rf atur-backup
+rm -rf backup
 
 fun_bar() {
     CMD[0]="$1"
@@ -131,6 +132,8 @@ wget -q -O /usr/bin/online "https://raw.githubusercontent.com/hokagelegend9999/g
 wget -q -O /usr/bin/atur-backup "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/atur-backup" && chmod +x /usr/bin/atur-backup
 wget -q -O /usr/bin/online-xray "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-xray" && chmod +x /usr/bin/online-xray
 wget -q -O /usr/bin/online-trojan "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-trojan" && chmod +x /usr/bin/online-trojan
+wget -q -O /usr/bin/backup "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/backup" && chmod +x /usr/bin/backup
+
 
 chmod +x m-tcp
 chmod +x m-theme
@@ -181,6 +184,7 @@ chmod +x ceklimit
 chmod +x online
 chmod +x online-xray
 chmod +x online-trojan
+chmod +x backup
 clear
 
 }
