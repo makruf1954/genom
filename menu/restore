@@ -1,59 +1,100 @@
 #!/bin/bash
-# ==========================================
-# Color
-RED='\033[0;31m'
-NC='\033[0m'
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-LIGHT='\033[0;37m'
-CHATID=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 3)
-KEY=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 2)
-export TIME="10"
-export URL="https://api.telegram.org/bot$KEY/sendMessage"
-clear
-function notif_restore() {
-    green "Notif AddHost Tele"
-    sleep 2
-    CHATID="$CHATID"
-KEY="$KEY"
-TIME="$TIME"
-URL="$URL"
-TEXT="
-<code>◇━━━━━━━━━━━━━━◇</code>
-<b>  ⚠️ RESTORE NOTIF⚠️</b>
-<b>     Detail Restore VPS</b>
-<code>◇━━━━━━━━━━━━━━◇</code>
-<code>Restore Vps Done</code>
-<code>◇━━━━━━━━━━━━━━◇</code>
-<code>BY BOT : https://t.me/hokagelegend1</code>
-"
+# ==================================================
+#         SCRIPT RESTORE VPS DATA (v4 - FINAL)
+# ==================================================
 
-curl -s --max-time $TIME -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
-}
-# ==========================================
-# Getting
-clear
-echo "Silahkan Masukin Link Backupnya"
-read -rp "Link File: " -e url
-wget -O backup.zip "$url"
-unzip backup.zip
-rm -f backup.zip
-sleep 1
-echo Start Restore
-cd /root/backup
-cp passwd /etc/
-cp group /etc/
-cp shadow /etc/
-cp gshadow /etc/
-cp -r kyt /var/lib/
-cp -r xray /etc/
-cp -r html /var/www/
-cp crontab /etc/
+# Pastikan skrip dijalankan sebagai root
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root" 
+   exit 1
+fi
 
-notif_restore
-rm -rf /root/backup
-rm -f backup.zip
+if ! command -v unzip &> /dev/null; then
+    echo "Paket 'unzip' tidak ditemukan. Menginstall..."
+    apt update && apt install -y unzip
+    echo "'unzip' telah diinstall."
+fi
+
+# Warna untuk output
+NC="\e[0m"
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+WH='\033[1;37m'
+
+clear
+echo "============================================="
+echo "          SCRIPT RESTORE VPS DATA            "
+echo "============================================="
 echo ""
+
+# Meminta link file backup dari pengguna
+read -p "Masukkan Link File Backup Anda: " url
+
+if [ -z "$url" ]; then
+    echo -e "${RED}Error:${NC} Anda tidak memasukkan link apapun."
+    exit 1
+fi
+
+# Pindah ke direktori root dan siapkan folder sementara
+cd /root
+rm -rf restore_temp
+mkdir restore_temp
+cd restore_temp
+
+echo -e "${WH}[ INFO ]${NC} Mengunduh file backup, mohon tunggu..."
+file_id=$(echo "$url" | sed -r 's/.*id=([^&]+).*/\1/')
+confirm_cookie=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate "https://docs.google.com/uc?export=download&id=${file_id}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=${confirm_cookie}&id=${file_id}" -O backup.zip
+rm -f /tmp/cookies.txt
+
+if [[ ! -s "backup.zip" ]]; then
+    echo -e "${RED}[ GAGAL ]${NC} Gagal mengunduh file backup."
+    cd /root; rm -rf restore_temp; exit 1
+fi
+
+echo -e "${WH}[ INFO ]${NC} Mengekstrak file backup..."
+unzip backup.zip
+
+# -- BAGIAN YANG DIUBAH --
+# Pemeriksaan folder 'backup' dihapus karena struktur zip Anda tidak menggunakannya.
+# Sekarang kita langsung menyalin file dari direktori saat ini.
+
+echo -e "${WH}[ INFO ]${NC} Memulai proses restore data..."
+sleep 1
+
+# Salin kembali semua file dan direktori ke lokasi aslinya
+# Awalan "backup/" dihapus dari semua perintah cp
+cp -rf passwd /etc/
+cp -rf group /etc/
+cp -rf shadow /etc/
+cp -rf gshadow /etc/
+# Lanjutkan untuk file/folder lain yang mungkin ada di backup Anda
+[ -f crontab ] && cp -rf crontab /etc/
+[ -d xray ] && cp -rf xray /etc/
+[ -d html ] && cp -rf html /var/www/
+
+# Anda bisa menambahkan perintah cp lain di sini jika ada file lain di backup
+# Contoh: cp -rf nama_file_atau_folder /lokasi/tujuan/
+
+echo -e "${WH}[ INFO ]${NC} Mengatur ulang izin file (permissions)..."
+chmod 644 /etc/passwd
+chmod 644 /etc/group
+chmod 600 /etc/shadow
+chmod 600 /etc/gshadow
+
+echo -e "${WH}[ INFO ]${NC} Merestart service terkait..."
+systemctl restart xray > /dev/null 2>&1
+systemctl restart ssh > /dev/null 2>&1
+systemctl restart nginx > /dev/null 2>&1
+
+echo -e "${WH}[ INFO ]${NC} Membersihkan file sementara..."
+cd /root
+rm -rf restore_temp
+
+echo ""
+echo "============================================="
+echo -e "${GREEN}      PROSES RESTORE SELESAI!      ${NC}"
+echo "============================================="
+echo " VPS akan di-reboot dalam 5 detik untuk menyelesaikan proses."
+sleep 5
+reboot
