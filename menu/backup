@@ -39,15 +39,6 @@ domain=$(cat /etc/xray/domain 2>/dev/null || echo "Tidak ada domain")
 date=$(date +"%Y-%m-%d")
 timestamp=$(date +"%Y%m%d_%H%M%S")
 
-# Email configuration
-email=$(cat /root/email 2>/dev/null)
-if [[ "$email" = "" ]]; then
-    echo "Masukkan Email Untuk Menerima Backup"
-    read -rp "Email : " -e email
-    echo "$email" > /root/email
-fi
-
-clear
 echo -e "${GREEN}Mohon Menunggu, Proses Backup sedang berlangsung !!${NC}"
 
 # Backup directory and file
@@ -89,54 +80,65 @@ spinner $pid
 wait $pid
 if [ $? -ne 0 ]; then
     echo -e "${RED}Gagal mengupload backup ke Google Drive${NC}"
-    echo -e "${ORANGE}Memeriksa konfigurasi rclone...${NC}"
-    rclone config show
-    rm -rf "$BACKUP_DIR"
-    exit 1
+    link="Tidak tersedia"
 else
     echo -e "${GREEN}Upload ke Google Drive berhasil${NC}"
-fi
-
-# Get shareable link
-echo -e "${BLUE}Mendapatkan link download...${NC}"
-link=$(rclone link dr:backup/"$BACKUP_FILE_NAME" 2>/dev/null)
-if [[ ! "$link" =~ "id=" ]]; then
-    echo -e "${RED}Gagal mendapatkan link Google Drive${NC}"
-    link="Tidak tersedia"
+    # Get shareable link ONLY if upload is successful
+    echo -e "${BLUE}Mendapatkan link download...${NC}"
+    link=$(rclone link dr:backup/"$BACKUP_FILE_NAME" 2>/dev/null)
+    if [[ ! "$link" =~ "id=" ]]; then
+        echo -e "${RED}Gagal mendapatkan link Google Drive${NC}"
+        link="Tidak tersedia"
+    fi
 fi
 echo -e "${GREEN}Link backup: $link${NC}"
 
-# Send Telegram notification
-echo -e "${BLUE}Mengirim notifikasi Telegram...${NC}"
+# Send Telegram notification message
+echo -e "${BLUE}Mengirim notifikasi teks ke Telegram...${NC}"
 TEXT="
-<code>◇━━━━━━━━━━━━━━◇</code>
-<b>  ⚠️BACKUP NOTIF⚠️</b>
-<b>    Detail Backup VPS</b>
-<code>◇━━━━━━━━━━━━━━◇</code>
-<b>IP VPS  :</b> <code>${IP}</code>
-<b>DOMAIN :</b> <code>${domain}</code>
-<b>Tanggal :</b> <code>$date</code>
-<b>Waktu   :</b> <code>$(date +"%H:%M:%S")</code>
-<code>◇━━━━━━━━━━━━━━◇</code>
-<b>File Backup :</b> <code>$BACKUP_FILE_NAME</code>
-<b>Link Backup:</b> <code>$link</code>
-<code>◇━━━━━━━━━━━━━━◇</code>
-<code>Silahkan copy Link dan restore di VPS baru</code>
-<code>BY BOT : @HookageLegend</code>
+<b>🚨 Backup Notification 🚨</b>
+━━━━━━━━━━━━━━━━━━
+<i>Detail server Anda telah berhasil di-backup.</i>
+
+🖥️ <b>VPS Info</b>
+┣ <b>IP Address:</b> <code>${IP}</code>
+┣ <b>Domain:</b> <code>${domain}</code>
+┗ <b>Lokasi:</b> <code>$(curl -s ipinfo.io/city), $(curl -s ipinfo.io/country)</code>
+
+💾 <b>Backup Details</b>
+┣ <b>Nama File:</b> <code>${BACKUP_FILE_NAME}</code>
+┣ <b>Waktu:</b> <code>$(date '+%d %B %Y, %H:%M:%S') WIB</code>
+┗ <b>Status:</b> ✅ Berhasil
+
+📎 <b>Download Link</b>
+<a href=\"${link}\">Klik Disini Untuk Download</a>
 "
 curl -s --max-time $TIME -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" "$URL" >/dev/null
 
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}Notifikasi Telegram terkirim${NC}"
+    echo -e "${GREEN}Notifikasi teks berhasil terkirim${NC}"
 else
-    echo -e "${RED}Gagal mengirim notifikasi Telegram${NC}"
+    echo -e "${RED}Gagal mengirim notifikasi teks${NC}"
+fi
+
+# Send backup file to Telegram
+echo -e "${BLUE}Mengirim file backup ke Telegram...${NC}"
+(curl --max-time 180 -F "chat_id=${CHATID}" \
+     -F "document=@${BACKUP_FILE}" \
+     -F "caption=File backup: ${BACKUP_FILE_NAME}" \
+     https://api.telegram.org/bot${KEY}/sendDocument > /dev/null 2>&1) &
+pid=$!
+spinner $pid
+wait $pid
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}File backup berhasil dikirim ke Telegram.${NC}"
+else
+    echo -e "${RED}Gagal mengirim file backup ke Telegram (Mungkin ukuran file > 50MB).${NC}"
 fi
 
 # Clean up
-echo -e "${BLUE}Membersihkan direktori sementara...${NC}"
-rm -rf "$BACKUP_DIR"
+echo -e "${BLUE}Membersihkan file dan direktori sementara...${NC}"
 rm -f "$BACKUP_FILE"
-
-# --- Bagian email sengaja saya hapus untuk menyederhanakan, Anda bisa tambahkan kembali jika perlu ---
+rm -rf "$BACKUP_DIR"
 
 echo "Proses backup selesai."
