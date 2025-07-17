@@ -9,10 +9,10 @@ make install
 cd
 rm -rf wondershaper
 cd /usr/bin
-wget -O backup "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/backup.sh"
-wget -O restore "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/restore.sh"
-wget -O cleaner "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/cleaner.sh"
-wget -O xp "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/SYSTEM/xp.sh"
+wget -O backup "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/backup"
+wget -O restore "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/restore"
+wget -O cleaner "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/SYSTEM/cleaner.sh"
+wget -O xp "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/SYSTEM/xp.sh"
 chmod +x /usr/bin/backup
 chmod +x /usr/bin/restore
 chmod +x /usr/bin/cleaner
