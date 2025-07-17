@@ -449,7 +449,7 @@ echo -e " $COLOR1║${NC} ${WH}[${COLOR1}01${WH}]${NC} ${COLOR1}• ${WH}CHANGE 
 echo -e " $COLOR1║${NC} ${WH}[${COLOR1}02${WH}]${NC} ${COLOR1}• ${WH}CHANGE BANNER       ${WH}${WH}[${COLOR1}07${WH}]${NC} ${COLOR1}• ${WH}FIX NGINX OFF      ${WH}$COLOR1║ $NC"
 echo -e " $COLOR1║${NC} ${WH}[${COLOR1}03${WH}]${NC} ${COLOR1}• ${WH}CHANGE THEMA SC     ${WH}${WH}[${COLOR1}08${WH}]${NC} ${COLOR1}• ${WH}CHECK CPU VPS      ${WH}$COLOR1║ $NC"
 echo -e " $COLOR1║${NC} ${WH}[${COLOR1}04${WH}]${NC} ${COLOR1}• ${WH}CHANGE CORE MENU    ${WH}${WH}[${COLOR1}09${WH}]${NC} ${COLOR1}• ${WH}CHECK PORT VPS     ${WH}$COLOR1║ $NC"
-echo -e " $COLOR1║${NC} ${WH}[${COLOR1}05${WH}]${NC} ${COLOR1}• ${WH}CLEAR RAM CACHE     ${WH}${WH}[${COLOR1}10${WH}]${NC} ${COLOR1}• ${WH}AUTO REBUILD VM    ${WH}$COLOR1║ $NC"
+echo -e " $COLOR1║${NC} ${WH}[${COLOR1}05${WH}]${NC} ${COLOR1}• ${WH}CLEAR RAM CACHE     ${WH}${WH}[${COLOR1}10${WH}]${NC} ${COLOR1}• ${WH}REBUILD VPS INSTALL   ${WH}$COLOR1║ $NC"
 echo -e " $COLOR1╚══════════════════════════════════════════════════════╝${NC}"
 echo -e ""
 echo -ne " ${WH}Select menu ${COLOR1}: ${WH}"; read opt
@@ -463,7 +463,7 @@ case $opt in
 06 |7) clear ; certv2ray ;; 
 07 |8) clear ; gotopp ;; 
 09 |9) clear ; check-port ;; 
-10 |10) clear ; wget -q https://github.com/hokagelegend9999/genom/raw/refs/heads/main/rebuildpepesmenu && bash rebuildpepesmenu ;; 
+10 |10) clear ; wget -q https://github.com/hokagelegend9999/genom/raw/refs/heads/main/install-ulang-vps && bash install-ulang-vps ;; 
 00 |0) clear ; menu ;; 
 *) echo -e "" ; echo "Anda salah tekan" ; sleep 1 ; system ;;
 esac
