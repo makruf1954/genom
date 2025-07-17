@@ -10,19 +10,6 @@ iptables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5300
 netfilter-persistent save
 netfilter-persistent reload
 
-cd
-#delete directory
-rm -rf /etc/nsdomain
-rm nsdomain
-
-#input nameserver manual to cloudflare
-## read -rp "Masukkan domain: " -e domain
-
-## read -rp "Masukkan Subdomain: " -e sub
-## SUB_DOMAIN=${sub}.${domain}
-## NS_DOMAIN=slowdns-${SUB_DOMAIN}
-## echo $NS_DOMAIN > /root/nsdomain
-
 nameserver=$(cat /etc/nsdomain)
 apt update -y
 apt install -y python3 python3-dnslib net-tools
