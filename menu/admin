@@ -70,9 +70,11 @@ if check_ip_and_get_info "$IP_VPS"; then
         exit 1
     fi
 else
-    echo -e "${RED}❌ IP tidak terdaftar!${NC}"
-    echo -e "➥ KHUSUS GENOM PRO DAN ADMIN ${CYAN}「 ✦ @HokageLegend ✦ 」${NC}"
-    exit 1
+echo -e "${RED}${BOLD}🚫 Akses Ditolak!${NC}"
+echo -e "${YELLOW}🔐 IP Anda tidak terdaftar dalam sistem.${NC}"
+echo -e "${CYAN}⚠️ Khusus untuk pengguna ${BOLD}GENOM PRO${NC}${CYAN} dan ${BOLD}ADMIN${NC}${CYAN}.${NC}"
+echo -e "${CYAN}📞 Hubungi: ${BOLD}✦ @HokageLegend ✦${NC}"
+exit 1
 fi
 
 # =============================================
