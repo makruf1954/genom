@@ -371,6 +371,9 @@ echo -e "$COLOR1│                                                   $COLOR1│
 echo -e "${RED}╭═══════${ORANGE}══════ • ${YELLOW}CHECK USER ONLINE${GREEN} • ${CYAN}═══════════════╮${NC}"
 echo -e "${RED}│PILIH NOMOR${NC} ${YELLOW}[12] ${GREEN}🔍 MELIHAT USER ONLINE STATUS USER${NC}│ "
 echo -e "${CYAN}╰══${GREEN}==================${YELLOW}══=======${ORANGE}══════════════════════${RED}╯${NC}"
+echo -e "${RED}╭═══════${ORANGE}══════ • ${YELLOW}GENOM SCRIPT PRO${GREEN} • ${CYAN}═══════════════╮${NC}"
+echo -e "${RED}│PILIH NOMOR${NC} ${YELLOW}[15] ${GREEN}🧑‍💻 AKSESS GENOM PRO ADMIN 🧑‍💻${NC}│ "
+echo -e "${CYAN}╰══${GREEN}==================${YELLOW}══=======${ORANGE}══════════════════════${RED}╯${NC}"
 echo -e "$COLOR1│                                                   $COLOR1│ $NC"
 echo -e "$COLOR1╰═══════════════════════════════════════════════════╯${NC}"
 echo -e "$COLOR1╭═══════════════════════════════════════════════════╮${NC}"
@@ -400,6 +403,7 @@ case $opt in
 10 | 10) clear ; system ;;
 11 | 11) clear ; menu-backup;;
 12 | 12) clear ; online;;
+15 | 15) clear ; admin;;
 00 | 0) clear ; menu ;;
 *) clear ; menu ;;
 esac
