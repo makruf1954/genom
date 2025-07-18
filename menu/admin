@@ -45,8 +45,11 @@ permission_file=$(curl -s --connect-timeout 10 https://github.com/hokagelegend99
 
 # Validasi file permission
 if [ -z "$permission_file" ]; then
-    echo -e "${RED}❌ Gagal mengambil data lisensi!${NC}"
-    exit 1
+echo -e "${RED}${BOLD}🚫 Akses Ditolak!${NC}"
+echo -e "${YELLOW}🔐 IP Anda tidak terdaftar dalam sistem.${NC}"
+echo -e "${CYAN}⚠️ Khusus untuk pengguna ${BOLD}GENOM PRO${NC}${CYAN} dan ${BOLD}ADMIN${NC}${CYAN}.${NC}"
+echo -e "${CYAN}📞 Hubungi: ${BOLD}✦ @HokageLegend ✦${NC}"
+exit 1
 fi
 
 # Ambil IP VPS dengan metode alternatif
