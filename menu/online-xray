@@ -4,35 +4,16 @@
 # Skrip Cek Penggunaan Kuota Xray - Versi Final Diperbaiki
 # ========================
 
-# === Fungsi pewarnaan dengan padding agar kolom tetap rapi ===
-pad_and_color() {
-    # $1 = text, $2 = width, $3 = fg color, $4 = blink (optional)
-    text="$1"
-    width="$2"
-    fgcolor="$3"
-    blink="$4"
-    out=$(printf "%-${width}s" "$text")
-    if [ -n "$blink" ]; then
-        printf "$blink$fgcolor%s\e[0m" "$out"
-    else
-        printf "$fgcolor%s\e[0m" "$out"
-    fi
-}
+# === Fungsi dan Variabel (disatukan agar lebih rapi) ===
+# Variabel Konfigurasi
+CONFIG_FILE="/etc/xray/config.json"
+LOG_FILE="/var/log/xray/access.log"
+API_PORT="10085"
+STATS_DIR="/var/lib/xray-stats"
+RECENT_LOG_LINES_FOR_ONLINE_STATUS=200
 
-# Fungsi ambil jumlah IP unik login user
-get_ip_count() {
-    # Menggunakan grep -c untuk menghitung baris yang cocok, lebih efisien
-    grep -oE "([0-9]{1,3}\.){3}[0-9]{1,3}" <<< "$(grep "email: $1" "$LOG_FILE" | grep -w "accepted")" | sort -u | wc -l
-}
-
-# Fungsi hitung kuota harian user (hari ini)
-get_today_usage() {
-    # $1 = username
-    # Diperbaiki agar lebih efisien, hanya grep sekali untuk hari ini
-    local user="$1"
-    local today=$(date "+%Y-%m-%d")
-    grep "$today" "$LOG_FILE" | grep "email: $user" | grep -w "accepted" | grep -oP '(uplink|downlink)=([0-9]+)' | grep -oP '[0-9]+' | awk '{s+=$1}END{print s+0}'
-}
+# [PERBAIKAN] Pastikan direktori untuk menyimpan statistik ada sebelum digunakan
+mkdir -p "$STATS_DIR"
 
 # Fungsi format bytes
 format_bytes() {
@@ -48,18 +29,14 @@ format_bytes() {
     fi
 }
 
-# Variabel Konfigurasi
-CONFIG_FILE="/etc/xray/config.json"
-LOG_FILE="/var/log/xray/access.log"
-API_PORT="10085"
-STATS_DIR="/var/lib/xray-stats"
-RECENT_LOG_LINES_FOR_ONLINE_STATUS=200
+# Fungsi ambil jumlah IP unik login user
+get_ip_count() {
+    grep "email: $1" "$LOG_FILE" | grep -w "accepted" | grep -oE "([0-9]{1,3}\.){3}[0-9]{1,3}" | sort -u | wc -l
+}
 
-# [PERBAIKAN] Pastikan direktori untuk menyimpan statistik ada
-mkdir -p "$STATS_DIR"
-
+# === Awal Skrip ===
 # Ambil daftar user/email dari config.json
-USERS=$(grep -oP '"email"\s*:\s*"\K[^"]+' "$CONFIG_FILE" | sort -u)
+USERS=$(grep -oP '"email"\s*:\s*"\K[^"]+' /etc/xray/config.json | sort -u)
 
 if [ -z "$USERS" ]; then
     echo "Tidak ada pengguna yang ditemukan di konfigurasi."
@@ -87,11 +64,13 @@ printf "| \e[1;97;44m%-15s\e[0m | \e[1;97;42m%-29s\e[0m | \e[1;30;106m%-9s\e[0m 
     "USERNAME" "STATUS" "JUMLAH IP" "KUOTA HARI INI" "TOTAL PENGGUNAAN"
 printf "%s\n" "$border"
 
+
 for user in $USERS; do
     stat_file="${STATS_DIR}/${user}.log"
-    # Ambil statistik total
+    # Ambil statistik total dari API
     uplink_raw=$(xray api stats --server=127.0.0.1:${API_PORT} -name "user>>>${user}>>>traffic>>>uplink" 2>/dev/null | grep -oP '"value": "\K[0-9]+' || echo 0)
     downlink_raw=$(xray api stats --server=127.0.0.1:${API_PORT} -name "user>>>${user}>>>traffic>>>downlink" 2>/dev/null | grep -oP '"value": "\K[0-9]+' || echo 0)
+    
     current_usage=$(( ${uplink_raw:-0} + ${downlink_raw:-0} ))
     previous_total=$(cat "$stat_file" 2>/dev/null || echo 0)
     new_total_usage=$(( previous_total + current_usage ))
@@ -107,25 +86,26 @@ for user in $USERS; do
         [ -n "$ip" ] && last_ip="$ip"
     fi
 
+    # Siapkan variabel untuk ditampilkan
     if [ -n "$last_ip" ]; then
         status_text="Online ($last_ip)"
-        status_colored=$(pad_and_color "$status_text" 29 "\e[1;32m" "\e[5m") # Hijau Terang + Blink
+        status_style="\e[1;32m\e[5m" # Hijau Terang + Blink
     else
         status_text="Offline"
-        status_colored=$(pad_and_color "$status_text" 29 "\e[1;31m") # Merah Terang
+        status_style="\e[1;31m" # Merah Terang
     fi
-    user_colored=$(pad_and_color "$user" 15 "\e[1;34m") # Biru Terang
-    total_usage_formatted=$(format_bytes $new_total_usage)
-    tu_colored=$(pad_and_color "$total_usage_formatted" 17 "\e[1;35m") # Magenta Terang
-    ip_count=$(get_ip_count "$user")
-    ip_count_colored=$(pad_and_color "$ip_count" 9 "\e[1;36m") # Cyan Terang
     
-    # Hitung kuota hari ini dari log
-    today_usage=$(get_today_usage "$user")
-    today_colored=$(pad_and_color "$(format_bytes $today_usage)" 17 "\e[1;33m") # Kuning Terang
+    ip_count=$(get_ip_count "$user")
+    
+    # Untuk "KUOTA HARI INI", kita gunakan data "current_usage" karena statistik direset setiap skrip jalan
+    # Jika cron diatur per 24 jam, ini akan menjadi kuota harian.
+    # Jika lebih sering, ini adalah kuota sejak pengecekan terakhir.
+    today_usage_formatted=$(format_bytes $current_usage)
+    total_usage_formatted=$(format_bytes $new_total_usage)
 
-    printf "| %s | %s | %s | %s | %s |\n" \
-        "$user_colored" "$status_colored" "$ip_count_colored" "$today_colored" "$tu_colored"
+    # Print data rata
+    printf "| \e[1;34m%-15s\e[0m | ${status_style}%-29s\e[0m | \e[1;36m%-9s\e[0m | \e[1;33m%17s\e[0m | \e[1;35m%17s\e[0m |\n" \
+        "$user" "$status_text" "$ip_count" "$today_usage_formatted" "$total_usage_formatted"
     printf "%s\n" "$border"
 done
 
