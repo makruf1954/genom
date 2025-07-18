@@ -134,6 +134,7 @@ wget -q -O /usr/bin/online-xray "https://github.com/hokagelegend9999/genom/raw/r
 wget -q -O /usr/bin/online-trojan "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-trojan" && chmod +x /usr/bin/online-trojan
 wget -q -O /usr/bin/backup "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/backup" && chmod +x /usr/bin/backup
 wget -q -O /usr/bin/restore "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/restore" && chmod +x /usr/bin/restore
+wget -q -O /usr/bin/admin "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/admin" && chmod +x /usr/bin/admin
 
 clear
 echo -e ""
