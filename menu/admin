@@ -11,25 +11,81 @@ export BLUE='\033[0;34m'
 export CYAN='\033[0;36m'
 export NC='\033[0m'
 export ORANGE='\033[0;91m'
+
+# Variabel Warna untuk Tema (akan dimuat dari file)
+export COLOR1=""
+export COLBG1=""
+export WH='\033[1;37m' # Warna putih, sering digunakan untuk teks
+
+# Konfigurasi File
+export COLOR_CONF="/etc/phreakers/theme/color.conf" # Pastikan path ini benar
+export AUTHOR_FILE="/etc/phreakers/theme/author.conf" # Contoh file untuk menyimpan informasi penulis
+
+# Fungsi untuk memuat warna dari konfigurasi tema
+load_colors() {
+    if [ -f "$COLOR_CONF" ]; then
+        colornow=$(cat "$COLOR_CONF")
+    else
+        # Tema default jika file tidak ditemukan
+        colornow="cyan"
+        mkdir -p /etc/phreakers/theme/ 2>/dev/null
+        echo "$colornow" > "$COLOR_CONF"
+        echo "HOKAGE LEGEND STORE" > "$AUTHOR_FILE" # Contoh inisialisasi file penulis
+    fi
+
+    # Menentukan warna berdasarkan tema yang dipilih
+    case "$colornow" in
+        "red")
+            COLOR1='\033[0;31m'
+            COLBG1='\033[41;37m'
+            ;;
+        "green")
+            COLOR1='\033[0;32m'
+            COLBG1='\033[42;37m'
+            ;;
+        "yellow")
+            COLOR1='\033[0;33m'
+            COLBG1='\033[43;37m'
+            ;;
+        "blue")
+            COLOR1='\033[0;34m'
+            COLBG1='\033[44;37m'
+            ;;
+        "magenta")
+            COLOR1='\033[0;35m'
+            COLBG1='\033[45;37m'
+            ;;
+        "cyan")
+            COLOR1='\033[0;36m'
+            COLBG1='\033[46;37m'
+            ;;
+        *)
+            # Kembali ke default jika warna tidak valid
+            COLOR1='\033[0;36m'
+            COLBG1='\033[46;37m'
+            ;;
+    esac
+}
+
 # =============================================
-#          [ Fungsi Pengecekan IP ]
+#           [ Fungsi Pengecekan IP ]
+# =============================================
 check_ip_and_get_info() {
     local ip=$1
+    # Loop melalui setiap baris dalam permission_file
     while IFS= read -r line; do
-        # Hapus karakter khusus dan spasi berlebih
-        line=$(echo "$line" | tr -d '\r' | sed 's/[^[:print:]]//g' | xargs)
+        local cleaned_line=$(echo "$line" | tr -d '\r' | sed 's/[^[:print:]]//g' | xargs)
 
-        # Split baris menjadi array
-        read -ra fields <<< "$line"
+        # Pisahkan baris menjadi array
+        read -ra fields <<< "$cleaned_line"
 
-        # Kolom 4 = IP Address (index 3)
+        # Kolom 4 = IP Address (indeks 3)
         if [[ "${fields[3]}" == "$ip" ]]; then
             client_name="${fields[1]}"  # Kolom 2
-            exp_date="${fields[2]}"     # Kolom 3
+            exp_date="${fields[2]}"      # Kolom 3
 
             # Bersihkan tanggal dari karakter khusus
             exp_date=$(echo "$exp_date" | sed 's/[^0-9-]//g' | xargs)
-
             return 0
         fi
     done <<< "$permission_file"
@@ -37,30 +93,29 @@ check_ip_and_get_info() {
 }
 
 # =============================================
-#          [ Main Script ]
+#           [ Main Script - Bagian Awal Validasi Akses ]
 # =============================================
 
 # Ambil data dari GitHub dengan timeout
-permission_file=$(curl -s --connect-timeout 10 https://github.com/hokagelegend9999/ijin/raw/refs/heads/main/genom-pro)
+permission_file=$(curl -sL --connect-timeout 10 https://github.com/hokagelegend9999/ijin/raw/refs/heads/main/genom-pro)
 
 # Validasi file permission
 if [ -z "$permission_file" ]; then
-echo -e "${RED}${BOLD}🚫 Akses Ditolak!${NC}"
-echo -e "${YELLOW}🔐 IP Anda tidak terdaftar dalam sistem.${NC}"
-echo -e "${CYAN}⚠️ Khusus untuk pengguna ${BOLD}GENOM PRO${NC}${CYAN} dan ${BOLD}ADMIN${NC}${CYAN}.${NC}"
-echo -e "${CYAN}📞 Hubungi: ${BOLD}✦ @HokageLegend ✦${NC}"
-exit 1
+    echo -e "${RED}${BOLD}🚫 Akses Ditolak!${NC}"
+    echo -e "${YELLOW}🔐 IP Anda tidak terdaftar dalam sistem.${NC}"
+    echo -e "${CYAN}⚠️ Khusus untuk pengguna ${BOLD}GENOM PRO${NC}${CYAN} dan ${BOLD}ADMIN${NC}${CYAN}.${NC}"
+    echo -e "${CYAN}📞 Hubungi: ${BOLD}✦ @HokageLegend ✦${NC}"
+    exit 1
 fi
 
 # Ambil IP VPS dengan metode alternatif
 IP_VPS=$(curl -s ipv4.icanhazip.com)
 
 # =============================================
-#          [ Pengecekan IP ]
+#           [ Pengecekan IP & Lisensi ]
 # =============================================
 echo -e "${GREEN}⌛ Memeriksa lisensi...${NC}"
 if check_ip_and_get_info "$IP_VPS"; then
-
     # Validasi format tanggal ISO 8601
     if ! [[ "$exp_date" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]]; then
         echo -e "${RED}❌ Format tanggal invalid: '$exp_date' (harus YYYY-MM-DD)${NC}"
@@ -73,15 +128,15 @@ if check_ip_and_get_info "$IP_VPS"; then
         exit 1
     fi
 else
-echo -e "${RED}${BOLD}🚫 Akses Ditolak!${NC}"
-echo -e "${YELLOW}🔐 IP Anda tidak terdaftar dalam sistem.${NC}"
-echo -e "${CYAN}⚠️ Khusus untuk pengguna ${BOLD}GENOM PRO${NC}${CYAN} dan ${BOLD}ADMIN${NC}${CYAN}.${NC}"
-echo -e "${CYAN}📞 Hubungi: ${BOLD}✦ @HokageLegend ✦${NC}"
-exit 1
+    echo -e "${RED}${BOLD}🚫 Akses Ditolak!${NC}"
+    echo -e "${YELLOW}🔐 IP Anda tidak terdaftar dalam sistem.${NC}"
+    echo -e "${CYAN}⚠️ Khusus untuk pengguna ${BOLD}GENOM PRO${NC}${CYAN} dan ${BOLD}ADMIN${NC}${CYAN}.${NC}"
+    echo -e "${CYAN}📞 Hubungi: ${BOLD}✦ @HokageLegend ✦${NC}"
+    exit 1
 fi
 
 # =============================================
-#          [ Hitung Hari Tersisa ]
+#           [ Hitung Hari Tersisa ]
 # =============================================
 current_epoch=$(date +%s)
 exp_epoch=$(date -d "$exp_date" +%s)
@@ -94,37 +149,55 @@ fi
 days_remaining=$(( (exp_epoch - current_epoch) / 86400 ))
 
 # =============================================
-#          [ Pengecekan Dependency ]
+#           [ Pengecekan Dependency ]
 # =============================================
 if ! command -v jq &>/dev/null; then
-    echo -e "${YELLOW}⚠️ Installing jq...${NC}"
-    sudo apt-get install jq -y
+    echo -e "${YELLOW}⚠️ Menginstal jq...${NC}"
+    sudo apt-get update -y > /dev/null
+    sudo apt-get install jq -y > /dev/null
 fi
 
-# IP Information Setup
-IPINFO_TOKEN="Abc12345"  # Ganti dengan token Anda
+# =============================================
+#           [ Fungsi Pengambilan Informasi Sistem & Jaringan ]
+# =============================================
 
 # System Information
 get_sys_info() {
-    # OS Info
-    OS=$(lsb_release -ds | sed 's/"//g' 2>/dev/null || cat /etc/*release | head -n1)
+    # Deteksi OS yang lebih tangguh
+    if command -v lsb_release &>/dev/null; then
+        OS=$(lsb_release -ds | sed 's/"//g')
+    elif [ -f /etc/os-release ]; then
+        OS=$(grep -E '^PRETTY_NAME|^NAME' /etc/os-release | head -n1 | cut -d'=' -f2 | sed 's/"//g')
+    elif [ -f /etc/debian_version ]; then
+        OS="Debian $(cat /etc/debian_version)"
+    elif [ -f /etc/redhat-release ]; then
+        OS=$(cat /etc/redhat-release)
+    else
+        OS="Linux Unknown"
+    fi
+    MODEL2="$OS" # Menggunakan MODEL2 untuk tampilan yang konsisten
+
     SERONLINE=$(uptime -p | cut -d " " -f 2-10000)
 
-    # Memory Info
+    # Info Memori
     RAM=$(free -m | awk '/Mem:/ {printf "%.0fM", $2}')
-    SWAP=$(free -m | awk '/Swap:/ {printf "%.0fM", $2}')
+    uram=$(free -h | awk '/Mem:/ {print $3}')
+    tram=$(free -h | awk '/Mem:/ {print $2}')
 
-    # CPU Info
-    CORE=$(nproc)
+    # Info CPU
+    CORE=$(nproc) # Menggunakan nproc untuk Core CPU
     CPU_USAGE=$(top -bn1 | awk '/Cpu/ {printf "%.1f%%", 100 - $8}')
+    cpu_usage1="$(ps aux | awk 'BEGIN {sum=0} {sum+=$3}; END {print sum}')"
+    cpu_usage="$((${cpu_usage1/\.*} / ${CORE:-1}))"
+    cpu_usage+=" %"
 }
 
 # Network Information
 get_net_info() {
-    # IP Address
+    # Alamat IP
     IPVPS=$(curl -s4 --connect-timeout 3 ifconfig.me || echo "Unknown")
-    ISP=$(curl -s --connect-timeout 3 ip-api.com/json/${IPVPS} | grep -Po '"isp":\s*"\K[^"]*' || echo "Unknown")
-    CITY=$(curl -s --connect-timeout 3 ip-api.com/json/${IPVPS} | grep -Po '"city":\s*"\K[^"]*' || echo "Unknown")
+    ISP=$(curl -s --connect-timeout 3 ip-api.com/json/"${IPVPS}" | grep -Po '"isp":\s*"\K[^"]*' || echo "Unknown")
+    CITY=$(curl -s --connect-timeout 3 ip-api.com/json/"${IPVPS}" | grep -Po '"city":\s*"\K[^"]*' || echo "Unknown")
 
     if [ -z "$ISP" ]; then
         ISP=$(curl -s ipapi.co/org)
@@ -133,11 +206,11 @@ get_net_info() {
         CITY=$(curl -s ipapi.co/city)
     fi
 
-    # Domain Info
+    # Info Domain
     DOMAIN=$(cat /etc/xray/domain 2>/dev/null || echo "Not Set")
 }
 
-# Uptime Calculation
+# Perhitungan Uptime
 get_uptime() {
     uptime_sec=$(awk '{print $1}' /proc/uptime | cut -d. -f1)
     days=$((uptime_sec/86400))
@@ -151,179 +224,167 @@ get_uptime() {
     fi
 }
 
-#######################################
-dateFromServer=$(curl -v --insecure --silent https://google.com/ 2>&1 | grep Date | sed -e 's/< Date: //')
-biji=`date +"%Y-%m-%d" -d "$dateFromServer"`
-MYIP=$(curl -sS ipv4.icanhazip.com)
-#######################################
-colornow=$(cat /etc/phreakers/theme/color.conf)
-export NC="\e[0m"
-export RED='\033[0;31m'
-export GREEN='\033[0;32m'
-export yl='\033[0;33m';
-export RED="\033[0;31m"
-export COLOR1="$(cat /etc/phreakers/theme/$colornow | grep -w "TEXT" | cut -d: -f2|sed 's/ //g')"
-export COLBG1="$(cat /etc/phreakers/theme/$colornow | grep -w "BG" | cut -d: -f2|sed 's/ //g')"
+# Status Sertifikat (Contoh variabel, sesuaikan dengan sumber data Anda)
+Exp2="2025-12-31" # Contoh, ganti dengan cara Anda mendapatkan tanggal Exp2
+today=$(date +"%Y-%m-%d")
 
-WH='\033[1;37m'
-#######################################
-# Server Information
-date_server=$(date -u +"%Y-%m-%d")
-wkt_server=$(timedatectl | grep "Time zone" | awk '{print $3}' | tr -d '()')
-
-# RAM Information
-tram=$(free -h | awk '/Mem:/ {print $2}')
-uram=$(free -h | awk '/Mem:/ {print $3}')
-#######################################
-# Network Information
-ipsaya=$(curl -s4 ifconfig.me)
-IPVPS=$(curl -s4 ifconfig.me)
-ISP=$(curl -s ipinfo.io/org | cut -d ' ' -f 2-10)
-CITY=$(curl -s ipinfo.io/city)
-#######################################
-
-mai="datediff "$Exp" "$DATE""
-
-# CERTIFICATE STATUS
 d1=$(date -d "$Exp2" +%s)
 d2=$(date -d "$today" +%s)
 certificate=$(( (d1 - d2) / 86400 ))
 
-WKT=$(curl -s ipinfo.io/timezone?token=$ipn )
+# IP, Waktu, Tanggal
+WKT=$(curl -s ipinfo.io/timezone) # Tanpa token jika tidak diperlukan
 DAY=$(date +%A)
 DATE=$(date +%m/%d/%Y)
 DATE2=$(date -R | cut -d " " -f -5)
 MYIP=$(curl -sS ipv4.icanhazip.com)
 
+# Membuat direktori dan file yang diperlukan jika belum ada
 cd
-if [ ! -e /etc/per/id ]; then
-  mkdir -p /etc/per
-  echo "" > /etc/per/id
-  echo "" > /etc/per/token
-elif [ ! -e /etc/perlogin/id ]; then
-  mkdir -p /etc/perlogin
-  echo "" > /etc/perlogin/id
-  echo "" > /etc/perlogin/token
-elif [ ! -e /usr/bin/id ]; then
-  echo "" > /usr/bin/idchat
-  echo "" > /usr/bin/token
+if [ ! -d /etc/per ]; then
+    mkdir -p /etc/per
+    echo "" > /etc/per/id
+    echo "" > /etc/per/token
+fi
+if [ ! -d /etc/perlogin ]; then
+    mkdir -p /etc/perlogin
+    echo "" > /etc/perlogin/id
+    echo "" > /etc/perlogin/token
+fi
+if [ ! -f /usr/bin/idchat ]; then
+    echo "" > /usr/bin/idchat
+    echo "" > /usr/bin/token
 fi
 
-if [ ! -e /etc/xray/ssh ]; then
-  echo "" > /etc/xray/ssh
-elif [ ! -e /etc/xray/sshx ]; then
-  mkdir -p /etc/xray/sshx
-elif [ ! -e /etc/xray/sshx/listlock ]; then
-  echo "" > /etc/xray/sshx/listlock
-elif [ ! -e /etc/vmess ]; then
-  mkdir -p /etc/vmess
-elif [ ! -e /etc/vmess/listlock ]; then
-  echo "" > /etc/vmess/listlock
-elif [ ! -e /etc/vless ]; then
-  mkdir -p /etc/vless
-elif [ ! -e /etc/vless/listlock ]; then
-  echo "" > /etc/vless/listlock
-elif [ ! -e /etc/trojan ]; then
-  mkdir -p /etc/trojan
-elif [ ! -e /etc/trojan/listlock ]; then
-  echo "" > /etc/trojan/listlock
+if [ ! -f /etc/xray/ssh ]; then
+    echo "" > /etc/xray/ssh
 fi
-clear
-MODEL2=$(cat /etc/os-release | grep -w PRETTY_NAME | head -n1 | sed 's/=//g' | sed 's/"//g' | sed 's/PRETTY_NAME//g')
-LOADCPU=$(printf '%-0.00001s' "$(top -bn1 | awk '/Cpu/ { cpu = "" 100 - $8 "%" }; END { print cpu }')")
-CORE=$(printf '%-1s' "$(grep -c cpu[0-9] /proc/stat)")
-cpu_usage1="$(ps aux | awk 'BEGIN {sum=0} {sum+=$3}; END {print sum}')"
-cpu_usage="$((${cpu_usage1/\.*} / ${corediilik:-1}))"
-cpu_usage+=" %"
-# usage
+if [ ! -d /etc/xray/sshx ]; then
+    mkdir -p /etc/xray/sshx
+fi
+if [ ! -f /etc/xray/sshx/listlock ]; then
+    echo "" > /etc/xray/sshx/listlock
+fi
+if [ ! -d /etc/vmess ]; then
+    mkdir -p /etc/vmess
+fi
+if [ ! -f /etc/vmess/listlock ]; then
+    echo "" > /etc/vmess/listlock
+fi
+if [ ! -d /etc/vless ]; then
+    mkdir -p /etc/vless
+fi
+if [ ! -f /etc/vless/listlock ]; then
+    echo "" > /etc/vless/listlock
+fi
+if [ ! -d /etc/trojan ]; then
+    mkdir -p /etc/trojan
+fi
+if [ ! -f /etc/trojan/listlock ]; then
+    echo "" > /etc/trojan/listlock
+fi
+
+# Penggunaan Vnstat
 vnstat_profile=$(vnstat | sed -n '3p' | awk '{print $1}' | grep -o '[^:]*')
-vnstat -i ${vnstat_profile} >/etc/t1
-bulan=$(date +%b)
-tahun=$(date +%y)
-ba=$(curl -s https://pastebin.com/raw/0gWiX6hE)
-today=$(vnstat -i ${vnstat_profile} | grep today | awk '{print $8}')
-todayd=$(vnstat -i ${vnstat_profile} | grep today | awk '{print $8}')
-today_v=$(vnstat -i ${vnstat_profile} | grep today | awk '{print $9}')
-today_rx=$(vnstat -i ${vnstat_profile} | grep today | awk '{print $2}')
-today_rxv=$(vnstat -i ${vnstat_profile} | grep today | awk '{print $3}')
-today_tx=$(vnstat -i ${vnstat_profile} | grep today | awk '{print $5}')
-today_txv=$(vnstat -i ${vnstat_profile} | grep today | awk '{print $6}')
-if [ "$(grep -wc ${bulan} /etc/t1)" != '0' ]; then
+if [ -z "$vnstat_profile" ]; then
+    echo -e "${RED}⚠️ Profil Vnstat tidak ditemukan. Pastikan vnstat terinstal dan berjalan.${NC}"
+    today_rx="N/A"
+    today_tx="N/A"
+    month_rx="N/A"
+    month_tx="N/A"
+    yesterday_rx="N/A"
+    yesterday_tx="N/A"
+else
+    vnstat -i "${vnstat_profile}" >/etc/t1 # Menulis output vnstat ke file sementara
     bulan=$(date +%b)
-    month=$(vnstat -i ${vnstat_profile} | grep "$bulan $ba$tahun" | awk '{print $9}')
-    month_v=$(vnstat -i ${vnstat_profile} | grep "$bulan $ba$tahun" | awk '{print $10}')
-    month_rx=$(vnstat -i ${vnstat_profile} | grep "$bulan $ba$tahun" | awk '{print $3}')
-    month_rxv=$(vnstat -i ${vnstat_profile} | grep "$bulan $ba$tahun" | awk '{print $4}')
-    month_tx=$(vnstat -i ${vnstat_profile} | grep "$bulan $ba$tahun" | awk '{print $6}')
-    month_txv=$(vnstat -i ${vnstat_profile} | grep "$bulan $ba$tahun" | awk '{print $7}')
-else
-    bulan2=$(date +%Y-%m)
-    month=$(vnstat -i ${vnstat_profile} | grep "$bulan2 " | awk '{print $8}')
-    month_v=$(vnstat -i ${vnstat_profile} | grep "$bulan2 " | awk '{print $9}')
-    month_rx=$(vnstat -i ${vnstat_profile} | grep "$bulan2 " | awk '{print $2}')
-    month_rxv=$(vnstat -i ${vnstat_profile} | grep "$bulan2 " | awk '{print $3}')
-    month_tx=$(vnstat -i ${vnstat_profile} | grep "$bulan2 " | awk '{print $5}')
-    month_txv=$(vnstat -i ${vnstat_profile} | grep "$bulan2 " | awk '{print $6}')
+    tahun=$(date +%y)
+    ba=$(curl -s https://pastebin.com/raw/0gWiX6hE || echo "")
+    
+    today_rx=$(vnstat -i "${vnstat_profile}" | grep today | awk '{print $2}')
+    today_rxv=$(vnstat -i "${vnstat_profile}" | grep today | awk '{print $3}')
+    today_tx=$(vnstat -i "${vnstat_profile}" | grep today | awk '{print $5}')
+    today_txv=$(vnstat -i "${vnstat_profile}" | grep today | awk '{print $6}')
+
+    if [ "$(grep -wc "${bulan}" /etc/t1)" != '0' ]; then
+        month_rx=$(vnstat -i "${vnstat_profile}" | grep "${bulan} ${ba}${tahun}" | awk '{print $3}')
+        month_rxv=$(vnstat -i "${vnstat_profile}" | grep "${bulan} ${ba}${tahun}" | awk '{print $4}')
+        month_tx=$(vnstat -i "${vnstat_profile}" | grep "${bulan} ${ba}${tahun}" | awk '{print $6}')
+        month_txv=$(vnstat -i "${vnstat_profile}" | grep "${bulan} ${ba}${tahun}" | awk '{print $7}')
+    else
+        bulan2=$(date +%Y-%m)
+        month_rx=$(vnstat -i "${vnstat_profile}" | grep "${bulan2} " | awk '{print $2}')
+        month_rxv=$(vnstat -i "${vnstat_profile}" | grep "${bulan2} " | awk '{print $3}')
+        month_tx=$(vnstat -i "${vnstat_profile}" | grep "${bulan2} " | awk '{print $5}')
+        month_txv=$(vnstat -i "${vnstat_profile}" | grep "${bulan2} " | awk '{print $6}')
+    fi
+    
+    if [ "$(grep -wc yesterday /etc/t1)" != '0' ]; then
+        yesterday_rx=$(vnstat -i "${vnstat_profile}" | grep yesterday | awk '{print $2}')
+        yesterday_rxv=$(vnstat -i "${vnstat_profile}" | grep yesterday | awk '{print $3}')
+        yesterday_tx=$(vnstat -i "${vnstat_profile}" | grep yesterday | awk '{print $5}')
+        yesterday_txv=$(vnstat -i "${vnstat_profile}" | grep yesterday | awk '{print $6}')
+    else
+        yesterday_rx="NULL"
+        yesterday_rxv="NULL"
+        yesterday_tx="NULL"
+        yesterday_txv="NULL"
+    fi
+    rm -f /etc/t1 # Hapus file sementara
 fi
-if [ "$(grep -wc yesterday /etc/t1)" != '0' ]; then
-    yesterday=$(vnstat -i ${vnstat_profile} | grep yesterday | awk '{print $8}')
-    yesterday_v=$(vnstat -i ${vnstat_profile} | grep yesterday | awk '{print $9}')
-    yesterday_rx=$(vnstat -i ${vnstat_profile} | grep yesterday | awk '{print $2}')
-    yesterday_rxv=$(vnstat -i ${vnstat_profile} | grep yesterday | awk '{print $3}')
-    yesterday_tx=$(vnstat -i ${vnstat_profile} | grep yesterday | awk '{print $5}')
-    yesterday_txv=$(vnstat -i ${vnstat_profile} | grep yesterday | awk '{print $6}')
-else
-    yesterday=NULL
-    yesterday_v=NULL
-    yesterday_rx=NULL
-    yesterday_rxv=NULL
-    yesterday_tx=NULL
-    yesterday_txv=NULL
-fi
+
+# =============================================
+#           [ Pengecekan Status Layanan ]
+# =============================================
 
 # // SSH Websocket Proxy
 ssh_ws=$( systemctl status ws-stunnel | grep Active | awk '{print $3}' | sed 's/(//g' | sed 's/)//g' )
-if [[ $ssh_ws == "running" ]]; then
+if [[ "$ssh_ws" == "running" ]]; then
     status_ws="${COLOR1}ON${NC}"
 else
     status_ws="${RED}OFF${NC}"
 fi
 
-# // nginx
+# // Nginx
 nginx=$( systemctl status nginx | grep Active | awk '{print $3}' | sed 's/(//g' | sed 's/)//g' )
-if [[ $nginx == "running" ]]; then
+if [[ "$nginx" == "running" ]]; then
     status_nginx="${COLOR1}ON${NC}"
 else
     status_nginx="${RED}OFF${NC}"
-    systemctl start nginx
+    systemctl start nginx 2>/dev/null # Mencoba memulai Nginx jika mati
 fi
 
 # // Dropbear
 dropbear_status=$(/etc/init.d/dropbear status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
-if [[ $dropbear_status == "running" ]]; then
+if [[ "$dropbear_status" == "running" ]]; then
    status_beruangjatuh="${COLOR1}ON${NC}"
 else
    status_beruangjatuh="${RED}OFF${NC}"
 fi
 
-# // SSH Websocket Proxy
+# // Xray
 xray=$(systemctl status xray | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
-if [[ $xray == "running" ]]; then
+if [[ "$xray" == "running" ]]; then
     status_xray="${COLOR1}ON${NC}"
 else
     status_xray="${RED}OFF${NC}"
 fi
-# STATUS EXPIRED ACTIVE
-Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[4$below" && Font_color_suffix="\033[0m"
+
+# STATUS EXPIRED ACTIVE (Sudah diperbaiki)
+Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
 Info="${Green_font_prefix}( Registered )${Font_color_suffix}"
 Error="${Green_font_prefix}${Font_color_suffix}${Red_font_prefix}[ EXPIRED ]${Font_color_suffix}"
 
-today=$(date -d "0 days" +"%Y-%m-%d")
-if [[ $today < $Exp2 ]]; then
+# Ambil nilai Exp2 dari sumber yang valid, contoh:
+# Exp2=$(cat /etc/xray/exp_date_xray)
+# Jika tidak ada sumber spesifik, gunakan contoh atau kosongkan
+#today=$(date +"%Y-%m-%d") # Sudah didefinisikan sebelumnya
+
+if [[ "$today" < "$Exp2" ]]; then
     sts="${Info}"
 else
     sts="${Error}"
 fi
+
 # TOTAL ACC CREATE VMESS WS
 vmess=$(grep -c -E "^#vmg " "/etc/xray/config.json")
 # TOTAL ACC CREATE  VLESS WS
@@ -332,100 +393,72 @@ vless=$(grep -c -E "^#vlg " "/etc/xray/config.json")
 trtls=$(grep -c -E "^#trg " "/etc/xray/config.json")
 # TOTAL ACC CREATE OVPN SSH
 total_ssh=$(grep -c -E "^### " "/etc/xray/ssh")
-#total_ssh="$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd | wc -l)"
 
-# Main Display
-clear
-get_sys_info
-get_net_info
-clear
-clear && clear && clear
-clear;clear;clear
-echo -e "$COLOR1╭═══════════════════════════════════════════════════╮${NC}"
-echo -e "$COLOR1│${NC} ${COLBG1}            ${WH}• HOKAGE LEGEND PREMIUM •            ${NC} $COLOR1│ $NC"
-echo -e "$COLOR1╰═══════════════════════════════════════════════════╯${NC}"
-echo -e "$COLOR1╭═══════════════════════════════════════════════════╮${NC}"
-echo -e "$COLOR1│ $NC${WH}❈ System OS          ${COLOR1}: ${WH}$MODEL2"
-echo -e "$COLOR1│ $NC${WH}❈ Memory Usage       ${COLOR1}: ${WH}$uram - $tram"
-echo -e "$COLOR1│ $NC${WH}❈ Core & CPU Usage   ${COLOR1}: ${WH}$CORE GB & $cpu_usage"
-echo -e "$COLOR1│ $NC${WH}❈ ISP                ${COLOR1}: ${WH}$ISP"
-echo -e "$COLOR1│ $NC${WH}❈ City               ${COLOR1}: ${WH}$CITY"
-echo -e "$COLOR1│ $NC${WH}❈ Domain             ${COLOR1}: ${WH}$(cat /etc/xray/domain)"
-echo -e "$COLOR1│ $NC${WH}❈ IP-VPS             ${COLOR1}: ${WH}$IPVPS${NC}"
-echo -e "$COLOR1│ $NC${WH}❈ Uptime             ${COLOR1}: ${WH}$SERONLINE${NC}"
-echo -e "$COLOR1╰═══════════════════════════════════════════════════╯${NC}"
-echo -e "$COLOR1╭═════════════════ • ${NC}${WH}STATUS SERVER${NC}${COLOR1} • ═══════════════╮${NC}"
-echo -e " ${WH} SSH WS : ${status_ws} ${WH} XRAY : ${status_xray} ${WH} NGINX : ${status_nginx} ${WH} DROPBEAR : ${status_beruangjatuh}$NC"
-echo -e "$COLOR1╰═══════════════════════════════════════════════════╯${NC}"
-show_header() {
+# =============================================
+#           [ FUNGSI MENU TEMA ]
+# =============================================
+show_header_theme() {
     echo -e " ${COLOR1}╔════════════════════════════════════════════════════╗${NC}"
-    echo -e " ${COLOR1}║${COLBG1}                ${WH}• THEMES PANEL MENU •               ${NC}${COLOR1}║"
+    echo -e " ${COLOR1}║${COLBG1}              ${WH}• THEMES PANEL MENU •            ${NC}${COLOR1}║"
     echo -e " ${COLOR1}╚════════════════════════════════════════════════════╝${NC}"
 }
 
-show_options() {
+show_options_theme() {
     echo -e " ${COLOR1}╔════════════════════════════════════════════════════╗${NC}"
-    echo -e " ${COLOR1}║ ${WH}[01]${NC} ${COLOR1}• ${WH}COLOR RED           ${WH}[04]${NC} ${COLOR1}• ${WH}COLOR GREEN      ${COLOR1}║${NC}"
-    echo -e " ${COLOR1}║ ${WH}[02]${NC} ${COLOR1}• ${WH}COLOR YELLOW        ${WH}[05]${NC} ${COLOR1}• ${WH}COLOR BLUE       ${COLOR1}║${NC}"
-    echo -e " ${COLOR1}║ ${WH}[03]${NC} ${COLOR1}• ${WH}COLOR MAGENTA       ${WH}[06]${NC} ${COLOR1}• ${WH}COLOR CYAN       ${COLOR1}║${NC}"
+    echo -e " ${COLOR1}║ ${WH}[01]${NC} ${COLOR1}• ${WH}COLOR RED         ${WH}[04]${NC} ${COLOR1}• ${WH}COLOR GREEN      ${COLOR1}║${NC}"
+    echo -e " ${COLOR1}║ ${WH}[02]${NC} ${COLOR1}• ${WH}COLOR YELLOW      ${WH}[05]${NC} ${COLOR1}• ${WH}COLOR BLUE       ${COLOR1}║${NC}"
+    echo -e " ${COLOR1}║ ${WH}[03]${NC} ${COLOR1}• ${WH}COLOR MAGENTA     ${WH}[06]${NC} ${COLOR1}• ${WH}COLOR CYAN       ${COLOR1}║${NC}"
     echo -e " ${COLOR1}╚════════════════════════════════════════════════════╝${NC}"
 }
 
-show_footer() {
+show_footer_theme() {
     local author=$(cat "$AUTHOR_FILE" 2>/dev/null || echo "Unknown")
     echo -e " ${COLOR1}╔══════════════════════ ${WH}CREDIT BY${NC} ${COLOR1}═══════════════════╗${NC}"
-    echo -e " ${COLOR1}║                  ${WH}• HOKAGE LEGEND STORE •                ${COLOR1}║${NC}"
+    echo -e " ${COLOR1}║                 ${WH}• HOKAGE LEGEND STORE •                 ${COLOR1}║${NC}"
     echo -e " ${COLOR1}╚════════════════════════════════════════════════════╝${NC}"
 }
 
-# ==================== THEME FUNCTIONS ====================
-clear
 change_theme() {
-    local color=$1
-    echo "${color}" > "${COLOR_CONF}"
+    local new_color=$1
+    echo "${new_color}" > "${COLOR_CONF}"
+    load_colors # Muat ulang warna setelah perubahan
     echo -e ""
     echo -e "  ${COLOR1}════════════════════════════════════════════════════${NC}"
-    echo -e "          ${WH}SUCCESS: ${COLOR1}Theme changed to ${WH}${color}${NC}"
+    echo -e "      ${WH}SUCCESS: ${COLOR1}Tema berhasil diubah menjadi ${WH}${new_color}${NC}"
+    sleep 1
 }
 
-# ==================== MAIN PROGRAM ====================
-load_colors
-clear
+# Fungsi untuk menampilkan menu tema
+m-theme() {
+    clear
+    show_header_theme
+    show_options_theme
+    show_footer_theme
 
-show_header
-show_options
-show_footer
+    echo -ne "\n ${WH}Pilih menu ${COLOR1}: ${WH}"
+    read -r colormenu
 
+    case $colormenu in
+        01|1) change_theme "red" ;;
+        02|2) change_theme "yellow" ;;
+        03|3) change_theme "magenta" ;;
+        04|4) change_theme "green" ;;
+        05|5) change_theme "blue" ;;
+        06|6) change_theme "cyan" ;;
+        00|0) clear; menu ;; # Kembali ke menu utama
+        *) echo -e "${RED}Pilihan tidak valid!${NC}"; sleep 1; m-theme ;; # Tetap di menu tema jika input salah
+    esac
 
-echo -ne "\n ${WH}Select menu ${COLOR1}: ${WH}"
-read -r colormenu
-
-case $colormenu in
-    01|1) change_theme "red" ;;
-    02|2) change_theme "yellow" ;;
-    03|3) change_theme "magenta" ;;
-    04|4) change_theme "green" ;;
-    05|5) change_theme "blue" ;;
-    06|6) change_theme "cyan" ;;
-    00|0) clear; menu ;;
-    *) clear; m-theme ;;
-esac
-
-echo -e "\n${NC}"
-read -n 1 -s -r -p "          Press any key to return to menu"
-clear
-menu
+    echo -e "\n${NC}"
+    read -n 1 -s -r -p "     Tekan sembarang tombol untuk kembali ke menu utama..."
+    clear
+    menu # Pastikan menu utama dipanggil setelah interaksi dengan menu tema
 }
 
-#===============================================================================#
-
+# =============================================
+#           [ FUNGSI MANAJEMEN DOMAIN ]
+# =============================================
 function domain() {
-    # Konfigurasi warna
-    COLOR1='\033[0;36m'
-    NC='\033[0m'
-    WH='\033[1;37m'
-    RED='\033[0;31m'
-
     # Fungsi progress bar
     fun_bar() {
         local cmd=("$@")
@@ -462,39 +495,34 @@ function domain() {
         rm -f "$output_file"
         echo -e "${COLOR1}Instalasi selesai!${NC}"
     }
-    # Fungsi validasi domain
-    validate_domain() {
-        local domain=$1
-        [[ $domain =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]] && return 0 || return 1
-    }
-
+    
     # Fungsi setup domain utama
     setup_main_domain() {
         clear
         echo -e "${COLOR1}┌──────────────────────────────────────────┐${NC}"
-        echo -e "${COLOR1}│ ${WH}       PEMBUATAN DOMAIN CUSTOM        ${NC}"
+        echo -e "${COLOR1}│ ${WH}        PEMBUATAN DOMAIN CUSTOM         ${NC}"
         echo -e "${COLOR1}└──────────────────────────────────────────┘${NC}"
 
-until [[ $dn1 =~ ^[a-zA-Z0-9_.-]+$ ]]; do
-read -rp "Masukan subdomain kamu Disini tanpa spasi : " -e dn1
-done
-echo "$dn1" > /etc/xray/domain
-echo "$dn1" > /root/subdomainx
-cd
-sleep 1
-fun_bar 'res1'
-clear
-rm -rf /root/subdomainx
-read -n 1 -s -r -p "  Press any key to Renew Cert or Ctrl + C to Exit"
-certv2ray
-clear
+        until [[ $dn1 =~ ^[a-zA-Z0-9_.-]+$ ]]; do
+            read -rp "Masukan subdomain Anda di sini (tanpa spasi): " -e dn1
+        done
+        echo "$dn1" > /etc/xray/domain
+        echo "$dn1" > /root/subdomainx
+        cd
+        sleep 1
+        fun_bar 'echo "Dummy command for progress bar"'
+        clear
+        rm -rf /root/subdomainx
+        read -n 1 -s -r -p "  Tekan sembarang tombol untuk Memperbarui Sertifikat atau Ctrl + C untuk Keluar"
+        certv2ray
+        clear
     }
 
-    # Menu utama
-    show_menu() {
+    # Menu utama domain
+    show_domain_menu() {
         clear
         echo -e "${COLOR1}┌──────────────────────────────────────────┐${NC}"
-        echo -e "${COLOR1}│ ${WH}        PILIHAN KONFIGURASI DOMAIN      ${NC}"
+        echo -e "${COLOR1}│ ${WH}       PILIHAN KONFIGURASI DOMAIN       ${NC}"
         echo -e "${COLOR1}├──────────────────────────────────────────┤${NC}"
         echo -e "${COLOR1}│ [1] Domain Custom                        ${NC}"
         echo -e "${COLOR1}│ [2] Instal SlowDNS                       ${NC}"
@@ -502,9 +530,9 @@ clear
         echo -e "${COLOR1}└──────────────────────────────────────────┘${NC}"
     }
 
-    # Handler menu
+    # Handler menu domain
     while true; do
-        show_menu
+        show_domain_menu
         read -p " Pilih opsi [0-2] : " choice
         
         case $choice in
@@ -517,7 +545,7 @@ clear
                 read -n 1 -s -r -p " Instalasi selesai! Tekan tombol untuk melanjutkan..."
                 ;;
             0)
-                menu
+                menu # Kembali ke menu utama setelah selesai
                 break
                 ;;
             *)
@@ -528,183 +556,295 @@ clear
     done
 }
 
-#===============================================================================#
-
+# =============================================
+#           [ FUNGSI SERTIFIKAT XRAY ]
+# =============================================
 function certv2ray(){
 echo -e ""
-echo start
+echo "Memulai pembaruan sertifikat..."
 sleep 0.5
-source /var/lib/ipvps.conf
-domain=$(cat /etc/xray/domain)
-STOPWEBSERVER=$(lsof -i:89 | cut -d' ' -f1 | awk 'NR==2 {print $1}')
+source /var/lib/ipvps.conf 2>/dev/null
+domain=$(cat /etc/xray/domain 2>/dev/null)
+if [ -z "$domain" ]; then
+    echo -e "${RED}❌ Domain belum diatur. Harap atur domain terlebih dahulu.${NC}"
+    sleep 2
+    menu
+    return 1
+fi
+STOPWEBSERVER=$(lsof -i:89 -t | awk '{print $1}')
+if [ -n "$STOPWEBSERVER" ]; then
+    kill "$STOPWEBSERVER" 2>/dev/null
+    echo -e "${YELLOW}Menghentikan proses di port 89...${NC}"
+    sleep 1
+fi
+systemctl stop nginx 2>/dev/null
+
 rm -rf /root/.acme.sh
-mkdir /root/.acme.sh
-systemctl stop $STOPWEBSERVER
-systemctl stop nginx
+mkdir -p /root/.acme.sh
+
 curl https://acme-install.netlify.app/acme.sh -o /root/.acme.sh/acme.sh
 chmod +x /root/.acme.sh/acme.sh
 /root/.acme.sh/acme.sh --register-account -m hokage.cfd
 /root/.acme.sh/acme.sh --upgrade --auto-upgrade
 /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
-/root/.acme.sh/acme.sh --issue -d $domain --standalone -k ec-256
-~/.acme.sh/acme.sh --installcert -d $domain --fullchainpath /etc/xray/xray.crt --keypath /etc/xray/xray.key --ecc
-chmod 777 /etc/xray/xray.key  
-systemctl restart nginx
-systemctl restart xray
+/root/.acme.sh/acme.sh --issue -d "$domain" --standalone -k ec-256
+
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}Sertifikat berhasil diterbitkan. Menginstal...${NC}"
+    ~/.acme.sh/acme.sh --installcert -d "$domain" --fullchainpath /etc/xray/xray.crt --keypath /etc/xray/xray.key --ecc
+    chmod 777 /etc/xray/xray.key
+    systemctl restart nginx 2>/dev/null
+    systemctl restart xray
+    echo -e "${GREEN}Sertifikat Xray berhasil diperbarui!${NC}"
+else
+    echo -e "${RED}❌ Gagal menerbitkan sertifikat. Periksa domain atau konfigurasi DNS Anda.${NC}"
+fi
+sleep 2
 menu
 }
 
-#===============================================================================#
-
+# =============================================
+#           [ FUNGSI CLEAR CACHE RAM ]
+# =============================================
 function clearcache(){
 clear
 echo ""
 echo ""
-echo -e "[ \033[32mInfo\033[0m ] Clear RAM Cache"
+echo -e "[ ${GREEN}Info${NC} ] Membersihkan Cache RAM"
 echo 1 > /proc/sys/vm/drop_caches
 sleep 3
-echo -e "[ \033[32mok\033[0m ] Cache cleared"
+echo -e "[ ${GREEN}OK${NC} ] Cache berhasil dibersihkan"
 echo ""
-echo "Back to menu in 3 second "
+echo "Kembali ke menu dalam 3 detik..."
 sleep 3
 menu
 }
 
-#===============================================================================#
-
+# =============================================
+#           [ FUNGSI SETUP BOT ]
+# =============================================
 function bot2(){
 clear
 echo -e "$COLOR1┌──────────────────────────────────────────┐${NC}"
-echo -e "$COLOR1     ${WH}Please select a Bot type below              ${NC}"
+echo -e "$COLOR1      ${WH}Silakan pilih jenis Bot di bawah ini     ${NC}"
 echo -e "$COLOR1└──────────────────────────────────────────┘${NC}"
 echo -e "$COLOR1┌──────────────────────────────────────────┐${NC}"
-echo -e "$COLOR1  [ 1 ] ${WH}Create BOT INFO Create User & Lain Lain    ${NC}"
+echo -e "$COLOR1  [ 1 ] ${WH}Buat BOT INFO (Pembuatan User & Lain-lain)${NC}"
 echo -e ""
-echo -e "$COLOR1  [ 2 ] ${WH}Create BOT INFO Backup Telegram    ${NC}"
+echo -e "$COLOR1  [ 2 ] ${WH}Buat BOT INFO Backup Telegram        ${NC}"
+echo -e "$COLOR1  [ 0 ] ${WH}Kembali ke Menu Utama                ${NC}"
 echo -e "$COLOR1└──────────────────────────────────────────┘${NC}"
 read -p "  Pilih opsi [0-2] : " bot
 echo ""
-if [[ $bot == "1" ]]; then
-clear
-rm -rf /etc/per
-mkdir -p /etc/per
-cd /etc/per
-touch token
-touch id
-echo -e ""
-echo -e "$COLOR1 [ INFO ] ${WH}Create for database Akun Dan Lain Lain"
-read -rp "Enter Token (Creat on @BotFather) : " -e token3
-echo "$token3" > token
-read -rp "Enter Your Id (Creat on @userinfobot)  : " -e idat2
-echo "$idat2" > id
-sleep 1
-bot2
+if [[ "$bot" == "1" ]]; then
+    clear
+    rm -rf /etc/per
+    mkdir -p /etc/per
+    cd /etc/per || exit
+    touch token
+    touch id
+    echo -e ""
+    echo -e "$COLOR1 [ INFO ] ${WH}Konfigurasi untuk database Akun dan Lain-lain"
+    read -rp "Masukkan Token Bot (Buat di @BotFather) : " -e token3
+    echo "$token3" > token
+    read -rp "Masukkan ID Anda (Cek di @userinfobot) : " -e idat2
+    echo "$idat2" > id
+    sleep 1
+    bot2 # Kembali ke menu bot
+elif [[ "$bot" == "2" ]]; then
+    clear
+    rm -f /usr/bin/token
+    rm -f /usr/bin/idchat
+    echo -e ""
+    echo -e "$COLOR1 [ INFO ] ${WH}Konfigurasi untuk database Backup Telegram"
+    read -rp "Masukkan Token Bot (Buat di @BotFather) : " -e token23
+    echo "$token23" > /usr/bin/token
+    read -rp "Masukkan ID Anda (Cek di @userinfobot) : " -e idchat
+    echo "$idchat" > /usr/bin/idchat
+    sleep 1
+    bot2 # Kembali ke menu bot
+elif [[ "$bot" == "0" ]]; then
+    menu # Kembali ke menu utama
+else
+    echo -e "${RED}Pilihan tidak valid!${NC}"
+    sleep 1
+    bot2 # Ulangi menu bot
 fi
-if [[ $bot == "2" ]]; then
-clear
-rm -rf /usr/bin/token
-rm -rf /usr/bin/idchat
-echo -e ""
-echo -e "$COLOR1 [ INFO ] ${WH}Create for database Backup Telegram"
-read -rp "Enter Token (Creat on @BotFather) : " -e token23
-echo "$token23" > /usr/bin/token
-read -rp "Enter Your Id (Creat on @userinfobot)  : " -e idchat
-echo "$idchat" > /usr/bin/idchat
-sleep 1
-bot2
-fi
-menu
 }
 
-#===============================================================================#
-
+# =============================================
+#           [ FUNGSI GOTOP (MONITORING CPU) ]
+# =============================================
 function gotopp(){
 cd
 if [[ -e /usr/bin/gotop ]]; then
-gotop
+    gotop
 else
-git clone --depth 1 https://github.com/cjbassi/gotop /tmp/gotop &> /dev/null
-/tmp/gotop/scripts/download.sh &> /dev/null
-chmod +x /root/gotop
-mv /root/gotop /usr/bin
-gotop
+    echo -e "${YELLOW}Menginstal gotop...${NC}"
+    git clone --depth 1 https://github.com/cjbassi/gotop /tmp/gotop &> /dev/null
+    /tmp/gotop/scripts/download.sh &> /dev/null
+    chmod +x /tmp/gotop/gotop
+    mv /tmp/gotop/gotop /usr/bin/gotop
+    rm -rf /tmp/gotop
+    if [[ -e /usr/bin/gotop ]]; then
+        echo -e "${GREEN}Gotop berhasil diinstal!${NC}"
+        gotop
+    else
+        echo -e "${RED}Gagal menginstal gotop.${NC}"
+        sleep 2
+    fi
 fi
+menu # Kembali ke menu utama setelah keluar dari gotop
 }
 
-#===============================================================================#
-
+# =============================================
+#           [ FUNGSI CORE MENU XRAY ]
+# =============================================
 function coremenu(){
 cd
-if [[ -e /usr/local/bin/modxray ]]; then
-echo -ne
-else
-wget -O /usr/local/bin/modxray https://github.com/dharak36/Xray-core/releases/download/v1.0.0/xray.linux.64bit &> /dev/null
+if [[ ! -e /usr/local/bin/modxray ]]; then
+    echo -e "${YELLOW}Mengunduh Xray Core Mod...${NC}"
+    wget -O /usr/local/bin/modxray https://github.com/dharak36/Xray-core/releases/download/v1.0.0/xray.linux.64bit &> /dev/null
+    chmod 755 /usr/local/bin/modxray
 fi
-cd
-if [[ -e /usr/local/bin/offixray ]]; then
-echo -ne
-else
-cp -r /usr/local/bin/xray /usr/local/bin/offixray &> /dev/null
+if [[ ! -e /usr/local/bin/offixray ]]; then
+    echo -e "${YELLOW}Menyalin Xray Core Official...${NC}"
+    cp /usr/local/bin/xray /usr/local/bin/offixray &> /dev/null
+    chmod 755 /usr/local/bin/offixray
 fi
 clear
 echo -e " "
 echo -e "$COLOR1┌─────────────────────────────────────────────┐${NC}"
-echo -e "$COLOR1│ ${WH}Please select a your Choice to Set CORE MENU           ${NC}"
+echo -e "$COLOR1│ ${WH}Silakan pilih pilihan Anda untuk Mengatur CORE MENU${NC}"
 echo -e "$COLOR1└─────────────────────────────────────────────┘${NC}"
 echo -e "$COLOR1┌─────────────────────────────────────────────┐${NC}"
-echo -e "$COLOR1│  [ 1 ]  ${WH}XRAY CORE OFFICIAL       ${NC}"
+echo -e "$COLOR1│  [ 1 ]  ${WH}XRAY CORE OFFICIAL          ${NC}"
 echo -e "$COLOR1│"
-echo -e "$COLOR1│  [ 2 ]  ${WH}XRAY CORE MOD    ${NC}"
+echo -e "$COLOR1│  [ 2 ]  ${WH}XRAY CORE MOD               ${NC}"
+echo -e "$COLOR1│  [ 0 ]  ${WH}Kembali ke Menu Utama       ${NC}"
 echo -e "$COLOR1└─────────────────────────────────────────────┘${NC}"
-until [[ $core =~ ^[0-9]+$ ]]; do
-read -p "   Pilih opsi [0-2] : " core
+until [[ $core =~ ^[0-9]+$ && ($core -ge 0 && $core -le 2) ]]; do
+    read -p "    Pilih opsi [0-2] : " core
 done
-if [[ $core == "1" ]]; then
-clear
-echo -e " "
-cp -r /usr/local/bin/offixray /usr/local/bin/xray &> /dev/null
-chmod 755 /usr/local/bin/xray
-systemctl restart xray
-echo -e "$COLOR1 [ INFO ] ${WH}Succes Change Xray Core Official"
+if [[ "$core" == "1" ]]; then
+    clear
+    echo -e " "
+    cp /usr/local/bin/offixray /usr/local/bin/xray &> /dev/null
+    chmod 755 /usr/local/bin/xray
+    systemctl restart xray
+    echo -e "$COLOR1 [ INFO ] ${WH}Berhasil Mengubah Xray Core Official"
+elif [[ "$core" == "2" ]]; then
+    clear
+    echo -e " "
+    cp /usr/local/bin/modxray /usr/local/bin/xray &> /dev/null
+    chmod 755 /usr/local/bin/xray
+    systemctl restart xray
+    echo -e "$COLOR1 [ INFO ] ${WH}Berhasil Mengubah Xray Core Mod "
+elif [[ "$core" == "0" ]]; then
+    menu # Kembali ke menu utama
 fi
-if [[ $core == "2" ]]; then
-clear
-echo -e " "
-cp -r /usr/local/bin/modxray /usr/local/bin/xray &> /dev/null
-chmod 755 /usr/local/bin/xray
-systemctl restart xray
-echo -e  "$COLOR1 [ INFO ] ${WH}Succes Change Xray Core Mod "
-fi
-read -n 1 -s -r -p "Press any key to back on menu"
+read -n 1 -s -r -p "Tekan sembarang tombol untuk kembali ke menu"
 menu
 }
 
-#===============================================================================#
+# =============================================
+#           [ FUNGSI CHECK PORT VPS ]
+# =============================================
+function check-port() {
+    clear
+    echo -e "${COLOR1}┌──────────────────────────────────────────┐${NC}"
+    echo -e "${COLOR1}│ ${WH}        PEMERIKSAAN PORT VPS           ${NC}"
+    echo -e "${COLOR1}└──────────────────────────────────────────┘${NC}"
+    echo -e ""
+    echo -e "${WH}Memeriksa port yang terbuka...${NC}"
+    echo ""
 
-clear
-echo -e " $COLOR1╔══════════════════════════════════════════════════════╗${NC}"
-echo -e " $COLOR1║${NC}${COLBG1}                   ${WH}• SYSTEM MENU •                    ${NC}$COLOR1║ $NC"
-echo -e " $COLOR1╚══════════════════════════════════════════════════════╝${NC}"
-echo -e " $COLOR1╔══════════════════════════════════════════════════════╗${NC}"
-echo -e " $COLOR1║${NC} ${WH}[${COLOR1}01${WH}]${NC} ${COLOR1}• ${WH}CHANGE DOMAIN       ${WH}${WH}[${COLOR1}06${WH}]${NC} ${COLOR1}• ${WH}SETUP BOT INFO     ${WH}$COLOR1║ $NC"
-echo -e " $COLOR1║${NC} ${WH}[${COLOR1}02${WH}]${NC} ${COLOR1}• ${WH}CHANGE BANNER       ${WH}${WH}[${COLOR1}07${WH}]${NC} ${COLOR1}• ${WH}FIX NGINX OFF      ${WH}$COLOR1║ $NC"
-echo -e " $COLOR1║${NC} ${WH}[${COLOR1}03${WH}]${NC} ${COLOR1}• ${WH}CHANGE THEMA SC     ${WH}${WH}[${COLOR1}08${WH}]${NC} ${COLOR1}• ${WH}CHECK CPU VPS      ${WH}$COLOR1║ $NC"
-echo -e " $COLOR1║${NC} ${WH}[${COLOR1}04${WH}]${NC} ${COLOR1}• ${WH}CHANGE CORE MENU    ${WH}${WH}[${COLOR1}09${WH}]${NC} ${COLOR1}• ${WH}CHECK PORT VPS     ${WH}$COLOR1║ $NC"
-echo -e " $COLOR1║${NC} ${WH}[${COLOR1}05${WH}]${NC} ${COLOR1}• ${WH}CLEAR RAM CACHE     ${WH}${WH}[${COLOR1}10${WH}]${NC} ${COLOR1}• ${WH}REBUILD VPS        ${WH}$COLOR1║ $NC"
-echo -e " $COLOR1╚══════════════════════════════════════════════════════╝${NC}"
-echo -e ""
-echo -ne " ${WH}Select menu ${COLOR1}: ${WH}"; read opt
-case $opt in
-01 |1) clear ; domain ;; 
-02 |2) clear ; nano /etc/issue.net && chmod +x /etc/issue.net ;; 
-03 |3) clear ; m-theme ;; 
-04 |4) clear ; coremenu ;; 
-05 |5) clear ; clearcache ;; 
-06 |6) clear ; bot2 ;; 
-06 |7) clear ; certv2ray ;; 
-07 |8) clear ; gotopp ;; 
-09 |9) clear ; check-port ;; 
-10 |10) clear ; wget -q https://github.com/hokagelegend9999/genom/raw/refs/heads/main/install-ulang-vps && bash install-ulang-vps ;; 
-00 |0) clear ; menu ;; 
-*) echo -e "" ; echo "Anda salah tekan" ; sleep 1 ; system ;;
-esac
+    # Daftar port umum yang ingin diperiksa
+    PORTS=(22 80 443 89 2083 2087 2095 2096 8080 8443) # Tambahkan port lain jika perlu
+
+    for port in "${PORTS[@]}"; do
+        echo -ne "Port $port: "
+        if nc -zv 127.0.0.1 "$port" &>/dev/null; then
+            echo -e "${GREEN}Terbuka (LISTEN)${NC}"
+        else
+            echo -e "${RED}Tertutup${NC}"
+        fi
+        sleep 0.1
+    done
+
+    echo ""
+    read -n 1 -s -r -p "Tekan sembarang tombol untuk kembali ke menu..."
+    menu
+}
+
+# =============================================
+#           [ FUNGSI MENU UTAMA ]
+# =============================================
+function menu() {
+    clear
+    # Muat ulang warna jika ada perubahan tema
+    load_colors
+
+    # Ambil informasi sistem dan jaringan terbaru
+    get_sys_info
+    get_net_info
+    
+    # Tampilkan informasi dan menu secara bersamaan
+    echo -e "$COLOR1╭═══════════════════════════════════════════════════╮${NC}"
+    echo -e "$COLOR1│${NC} ${COLBG1}              ${WH}• HOKAGE LEGEND PREMIUM •            ${NC} $COLOR1│ $NC"
+    echo -e "$COLOR1╰═══════════════════════════════════════════════════╯${NC}"
+    echo -e "$COLOR1╭═══════════════════════════════════════════════════╮${NC}"
+    echo -e "$COLOR1│ $NC${WH}❈ Sistem OS           ${COLOR1}: ${WH}$MODEL2"
+    echo -e "$COLOR1│ $NC${WH}❈ Penggunaan Memori   ${COLOR1}: ${WH}$uram - $tram"
+    echo -e "$COLOR1│ $NC${WH}❈ Core & Penggunaan CPU${COLOR1}: ${WH}$CORE Core & $cpu_usage"
+    echo -e "$COLOR1│ $NC${WH}❈ ISP                 ${COLOR1}: ${WH}$ISP"
+    echo -e "$COLOR1│ $NC${WH}❈ Kota                ${COLOR1}: ${WH}$CITY"
+    echo -e "$COLOR1│ $NC${WH}❈ Domain              ${COLOR1}: ${WH}$(cat /etc/xray/domain)"
+    echo -e "$COLOR1│ $NC${WH}❈ IP-VPS              ${COLOR1}: ${WH}$IPVPS${NC}"
+    echo -e "$COLOR1│ $NC${WH}❈ Uptime              ${COLOR1}: ${WH}$SERONLINE${NC}"
+    echo -e "$COLOR1╰═══════════════════════════════════════════════════╯${NC}"
+    echo -e "$COLOR1╭═════════════════ • ${NC}${WH}STATUS SERVER${NC}${COLOR1} • ═══════════════╮${NC}"
+    echo -e " ${WH} SSH WS : ${status_ws} ${WH} XRAY : ${status_xray} ${WH} NGINX : ${status_nginx} ${WH} DROPBEAR : ${status_beruangjatuh}$NC"
+    echo -e "$COLOR1╰═══════════════════════════════════════════════════╯${NC}"
+
+    # Menu Utama
+    echo -e " $COLOR1╔══════════════════════════════════════════════════════╗${NC}"
+    echo -e " $COLOR1║${NC}${COLBG1}                   ${WH}• SYSTEM MENU •                  ${NC}$COLOR1║ $NC"
+    echo -e " $COLOR1╚══════════════════════════════════════════════════════╝${NC}"
+    echo -e " $COLOR1╔══════════════════════════════════════════════════════╗${NC}"
+    echo -e " $COLOR1║${NC} ${WH}[${COLOR1}01${WH}]${NC} ${COLOR1}• ${WH}UBAH DOMAIN           ${WH}[${COLOR1}06${WH}]${NC} ${COLOR1}• ${WH}SETUP BOT INFO      ${WH}$COLOR1║ $NC"
+    echo -e " $COLOR1║${NC} ${WH}[${COLOR1}02${WH}]${NC} ${COLOR1}• ${WH}UBAH BANNER           ${WH}[${COLOR1}07${WH}]${NC} ${COLOR1}• ${WH}PERBAIKI NGINX OFF  ${WH}$COLOR1║ $NC"
+    echo -e " $COLOR1║${NC} ${WH}[${COLOR1}03${WH}]${NC} ${COLOR1}• ${WH}UBAH TEMA SCRIPT      ${WH}[${COLOR1}08${WH}]${NC} ${COLOR1}• ${WH}CEK CPU VPS         ${WH}$COLOR1║ $NC"
+    echo -e " $COLOR1║${NC} ${WH}[${COLOR1}04${WH}]${NC} ${COLOR1}• ${WH}UBAH CORE XRAY        ${WH}[${COLOR1}09${WH}]${NC} ${COLOR1}• ${WH}CEK PORT VPS        ${WH}$COLOR1║ $NC"
+    echo -e " $COLOR1║${NC} ${WH}[${COLOR1}05${WH}]${NC} ${COLOR1}• ${WH}BERSIHKAN RAM CACHE   ${WH}[${COLOR1}10${WH}]${NC} ${COLOR1}• ${WH}REBUILD VPS         ${WH}$COLOR1║ $NC"
+    echo -e " $COLOR1║${NC} ${WH}[${COLOR1}00${WH}]${NC} ${COLOR1}• ${WH}KELUAR                                              ${WH}$COLOR1║ $NC"
+    echo -e " $COLOR1╚══════════════════════════════════════════════════════╝${NC}"
+    echo -e ""
+    echo -ne " ${WH}Pilih menu ${COLOR1}: ${WH}"; read opt
+    case $opt in
+    01 |1) clear ; domain ;;
+    02 |2) clear ; nano /etc/issue.net && chmod +x /etc/issue.net ; menu ;;
+    03 |3) clear ; m-theme ;; # Panggil m-theme jika ingin mengubah tema
+    04 |4) clear ; coremenu ;;
+    05 |5) clear ; clearcache ;;
+    06 |6) clear ; bot2 ;;
+    07 |7) clear ; certv2ray ;;
+    08 |8) clear ; gotopp ;;
+    09 |9) clear ; check-port ;;
+    10 |10) clear ; wget -q https://github.com/hokagelegend9999/genom/raw/refs/heads/main/install-ulang-vps && bash install-ulang-vps ; menu ;;
+    00 |0) clear ; exit ;;
+    *) echo -e "" ; echo -e "${RED}Pilihan tidak valid!${NC}" ; sleep 1 ; menu ;;
+    esac
+}
+
+# =============================================
+#           [ EKSEKUSI SCRIPT UTAMA ]
+# =============================================
+
+# Muat warna pertama kali
+load_colors
+
+# Setelah validasi lisensi, langsung panggil fungsi menu utama.
+# Fungsi menu utama akan bertanggung jawab untuk menampilkan semua informasi
+# dan menu secara bersamaan.
+menu
