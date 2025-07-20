@@ -1,4 +1,12 @@
 #!/bin/bash
+
+# =============================================
+#           [ Konfigurasi Awal ]
+# =============================================
+# Hentikan skrip jika ada error
+# set -e
+
+# Kosongkan layar
 clear
 
 # =============================================
@@ -11,485 +19,185 @@ export BLUE='\033[0;34m'
 export CYAN='\033[0;36m'
 export NC='\033[0m'
 export ORANGE='\033[0;91m'
-
-# Variabel Warna untuk Tema (akan dimuat dari file)
-export COLOR1=""
-export COLBG1=""
-export WH='\033[1;37m' # Warna putih, sering digunakan untuk teks
-
-# Konfigurasi File
-export COLOR_CONF="/etc/phreakers/theme/color.conf" # Pastikan path ini benar
-export AUTHOR_FILE="/etc/phreakers/theme/author.conf" # Contoh file untuk menyimpan informasi penulis
-
-# Fungsi untuk memuat warna dari konfigurasi tema
-load_colors() {
-    if [ -f "$COLOR_CONF" ]; then
-        colornow=$(cat "$COLOR_CONF")
-    else
-        # Tema default jika file tidak ditemukan
-        colornow="cyan"
-        mkdir -p /etc/phreakers/theme/ 2>/dev/null
-        echo "$colornow" > "$COLOR_CONF"
-        echo "HOKAGE LEGEND STORE" > "$AUTHOR_FILE" # Contoh inisialisasi file penulis
-    fi
-
-    # Menentukan warna berdasarkan tema yang dipilih
-    case "$colornow" in
-        "red")
-            COLOR1='\033[0;31m'
-            COLBG1='\033[41;37m'
-            ;;
-        "green")
-            COLOR1='\033[0;32m'
-            COLBG1='\033[42;37m'
-            ;;
-        "yellow")
-            COLOR1='\033[0;33m'
-            COLBG1='\033[43;37m'
-            ;;
-        "blue")
-            COLOR1='\033[0;34m'
-            COLBG1='\033[44;37m'
-            ;;
-        "magenta")
-            COLOR1='\033[0;35m'
-            COLBG1='\033[45;37m'
-            ;;
-        "cyan")
-            COLOR1='\033[0;36m'
-            COLBG1='\033[46;37m'
-            ;;
-        *)
-            # Kembali ke default jika warna tidak valid
-            COLOR1='\033[0;36m'
-            COLBG1='\033[46;37m'
-            ;;
-    esac
-}
+export WH='\033[1;37m'
 
 # =============================================
-#           [ Fungsi Pengecekan IP ]
+#           [ Fungsi Pengecekan Lisensi ]
 # =============================================
 check_ip_and_get_info() {
-    local ip=$1
-    # Loop melalui setiap baris dalam permission_file
+    local ip_to_check=$1
+    # Variabel permission_file harus sudah ada secara global
     while IFS= read -r line; do
-        local cleaned_line=$(echo "$line" | tr -d '\r' | sed 's/[^[:print:]]//g' | xargs)
+        # Hapus karakter aneh dan spasi berlebih
+        line=$(echo "$line" | tr -d '\r' | sed 's/[^[:print:]]//g' | xargs)
+        
+        #lewati baris kosong
+        [ -z "$line" ] && continue
 
-        # Pisahkan baris menjadi array
-        read -ra fields <<< "$cleaned_line"
+        # Split baris menjadi array
+        read -ra fields <<< "$line"
 
-        # Kolom 4 = IP Address (indeks 3)
-        if [[ "${fields[3]}" == "$ip" ]]; then
+        # Cek jika kolom ke-4 (index 3) adalah IP yang dicari
+        if [[ "${fields[3]}" == "$ip_to_check" ]]; then
             client_name="${fields[1]}"  # Kolom 2
-            exp_date="${fields[2]}"      # Kolom 3
-
-            # Bersihkan tanggal dari karakter khusus
-            exp_date=$(echo "$exp_date" | sed 's/[^0-9-]//g' | xargs)
-            return 0
+            exp_date="${fields[2]}"     # Kolom 3
+            return 0 # Sukses, IP ditemukan
         fi
     done <<< "$permission_file"
-    return 1
+    
+    return 1 # Gagal, IP tidak ditemukan
 }
 
 # =============================================
-#           [ Main Script - Bagian Awal Validasi Akses ]
+#           [ Proses Utama ]
 # =============================================
 
-# Ambil data dari GitHub dengan timeout
-permission_file=$(curl -sL --connect-timeout 10 https://github.com/hokagelegend9999/ijin/raw/refs/heads/main/genom-pro)
+# Ambil data lisensi dari GitHub dengan timeout
+echo -e "${GREEN}⌛ Mengambil data lisensi...${NC}"
+permission_file=$(curl -s --connect-timeout 10 https://raw.githubusercontent.com/hokagelegend9999/ijin/main/gnome)
 
 # Validasi file permission
 if [ -z "$permission_file" ]; then
-    echo -e "${RED}${BOLD}🚫 Akses Ditolak!${NC}"
-    echo -e "${YELLOW}🔐 IP Anda tidak terdaftar dalam sistem.${NC}"
-    echo -e "${CYAN}⚠️ Khusus untuk pengguna ${BOLD}GENOM PRO${NC}${CYAN} dan ${BOLD}ADMIN${NC}${CYAN}.${NC}"
-    echo -e "${CYAN}📞 Hubungi: ${BOLD}✦ @HokageLegend ✦${NC}"
+    echo -e "${RED}❌ Gagal mengambil data lisensi! Pastikan server terhubung ke internet.${NC}"
     exit 1
 fi
 
-# Ambil IP VPS dengan metode alternatif
-IP_VPS=$(curl -s ipv4.icanhazip.com)
+# Ambil IP VPS
+IP_VPS=$(curl -s --connect-timeout 5 ipv4.icanhazip.com)
 
-# =============================================
-#           [ Pengecekan IP & Lisensi ]
-# =============================================
-echo -e "${GREEN}⌛ Memeriksa lisensi...${NC}"
+# Lakukan pengecekan lisensi
+echo -e "${GREEN}⌛ Memeriksa lisensi untuk IP: $IP_VPS...${NC}"
 if check_ip_and_get_info "$IP_VPS"; then
-    # Validasi format tanggal ISO 8601
+    # Validasi format tanggal
     if ! [[ "$exp_date" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]]; then
-        echo -e "${RED}❌ Format tanggal invalid: '$exp_date' (harus YYYY-MM-DD)${NC}"
+        echo -e "${RED}❌ Format tanggal di file lisensi salah: '$exp_date' (seharusnya YYYY-MM-DD)${NC}"
         exit 1
     fi
 
-    # Validasi tanggal menggunakan date
-    if ! date -d "$exp_date" "+%s" &>/dev/null; then
-        echo -e "${RED}❌ Tanggal tidak valid secara kalender: $exp_date${NC}"
+    # Hitung sisa masa aktif
+    current_epoch=$(date +%s)
+    exp_epoch=$(date -d "$exp_date" +%s)
+
+    if (( exp_epoch < current_epoch )); then
+        echo -e "${RED}❌ Lisensi Anda telah habis pada tanggal $exp_date!${NC}"
         exit 1
     fi
+    days_remaining=$(( (exp_epoch - current_epoch) / 86400 ))
+    echo -e "${GREEN}✅ Lisensi valid. Sisa masa aktif: $days_remaining hari.${NC}"
+    sleep 2
 else
-    echo -e "${RED}${BOLD}🚫 Akses Ditolak!${NC}"
-    echo -e "${YELLOW}🔐 IP Anda tidak terdaftar dalam sistem.${NC}"
-    echo -e "${CYAN}⚠️ Khusus untuk pengguna ${BOLD}GENOM PRO${NC}${CYAN} dan ${BOLD}ADMIN${NC}${CYAN}.${NC}"
-    echo -e "${CYAN}📞 Hubungi: ${BOLD}✦ @HokageLegend ✦${NC}"
+    echo -e "${RED}❌ IP tidak terdaftar!${NC}"
+    echo -e "➥ Hubungi admin ${CYAN}「 ✦ @HokageLegend ✦ 」${NC}"
     exit 1
 fi
 
 # =============================================
-#           [ Hitung Hari Tersisa ]
+#           [ Fungsi Tampilan Menu ]
 # =============================================
-current_epoch=$(date +%s)
-exp_epoch=$(date -d "$exp_date" +%s)
-
-if (( exp_epoch < current_epoch )); then
-    echo -e "${RED}❌ Masa aktif telah habis!${NC}"
-    exit 1
-fi
-
-days_remaining=$(( (exp_epoch - current_epoch) / 86400 ))
-
-# =============================================
-#           [ Pengecekan Dependency ]
-# =============================================
-if ! command -v jq &>/dev/null; then
-    echo -e "${YELLOW}⚠️ Menginstal jq...${NC}"
-    sudo apt-get update -y > /dev/null
-    sudo apt-get install jq -y > /dev/null
-fi
-
-# =============================================
-#           [ Fungsi Pengambilan Informasi Sistem & Jaringan ]
-# =============================================
-
-# System Information
-get_sys_info() {
-    # Deteksi OS yang lebih tangguh
-    if command -v lsb_release &>/dev/null; then
-        OS=$(lsb_release -ds | sed 's/"//g')
-    elif [ -f /etc/os-release ]; then
-        OS=$(grep -E '^PRETTY_NAME|^NAME' /etc/os-release | head -n1 | cut -d'=' -f2 | sed 's/"//g')
-    elif [ -f /etc/debian_version ]; then
-        OS="Debian $(cat /etc/debian_version)"
-    elif [ -f /etc/redhat-release ]; then
-        OS=$(cat /etc/redhat-release)
-    else
-        OS="Linux Unknown"
-    fi
-    MODEL2="$OS" # Menggunakan MODEL2 untuk tampilan yang konsisten
-
-    SERONLINE=$(uptime -p | cut -d " " -f 2-10000)
-
-    # Info Memori
-    RAM=$(free -m | awk '/Mem:/ {printf "%.0fM", $2}')
-    uram=$(free -h | awk '/Mem:/ {print $3}')
+show_main_menu() {
+    clear
+    # --- PENGUMPULAN DATA SISTEM ---
+    MODEL2=$(cat /etc/os-release | grep -w PRETTY_NAME | head -n1 | sed 's/[=PRETTY_NAME"]//g')
+    LOADCPU=$(printf '%-0.1f' "$(top -bn1 | awk '/Cpu/ { print 100 - $8 }')")
+    CORE=$(nproc)
     tram=$(free -h | awk '/Mem:/ {print $2}')
+    uram=$(free -h | awk '/Mem:/ {print $3}')
+    ISP=$(curl -s ipinfo.io/org | cut -d ' ' -f 2-10)
+    CITY=$(curl -s ipinfo.io/city)
+    SERONLINE=$(uptime -p | cut -d " " -f 2-)
 
-    # Info CPU
-    CORE=$(nproc) # Menggunakan nproc untuk Core CPU
-    CPU_USAGE=$(top -bn1 | awk '/Cpu/ {printf "%.1f%%", 100 - $8}')
-    cpu_usage1="$(ps aux | awk 'BEGIN {sum=0} {sum+=$3}; END {print sum}')"
-    cpu_usage="$((${cpu_usage1/\.*} / ${CORE:-1}))"
-    cpu_usage+=" %"
-}
+    # --- STATUS SERVICE ---
+    # Xray
+    if systemctl is-active --quiet xray; then status_xray="${GREEN}ON${NC}"; else status_xray="${RED}OFF${NC}"; fi
+    # Nginx
+    if systemctl is-active --quiet nginx; then status_nginx="${GREEN}ON${NC}"; else status_nginx="${RED}OFF${NC}"; fi
+    # Dropbear
+    if /etc/init.d/dropbear status >/dev/null 2>&1; then status_beruangjatuh="${GREEN}ON${NC}"; else status_beruangjatuh="${RED}OFF${NC}"; fi
+    # SSH WS
+    if systemctl is-active --quiet ws-stunnel; then status_ws="${GREEN}ON${NC}"; else status_ws="${RED}OFF${NC}"; fi
+    # Bot Telegram
+    if systemctl is-active --quiet hokage-bot.service; then status_bot="${GREEN}ON${NC}"; else status_bot="${RED}OFF${NC}"; fi
 
-# Network Information
-get_net_info() {
-    # Alamat IP
-    IPVPS=$(curl -s4 --connect-timeout 3 ifconfig.me || echo "Unknown")
-    ISP=$(curl -s --connect-timeout 3 ip-api.com/json/"${IPVPS}" | grep -Po '"isp":\s*"\K[^"]*' || echo "Unknown")
-    CITY=$(curl -s --connect-timeout 3 ip-api.com/json/"${IPVPS}" | grep -Po '"city":\s*"\K[^"]*' || echo "Unknown")
-
-    if [ -z "$ISP" ]; then
-        ISP=$(curl -s ipapi.co/org)
-    fi
-    if [ -z "$CITY" ]; then
-        CITY=$(curl -s ipapi.co/city)
-    fi
-
-    # Info Domain
-    DOMAIN=$(cat /etc/xray/domain 2>/dev/null || echo "Not Set")
-}
-
-# Perhitungan Uptime
-get_uptime() {
-    uptime_sec=$(awk '{print $1}' /proc/uptime | cut -d. -f1)
-    days=$((uptime_sec/86400))
-    hours=$(( (uptime_sec%86400)/3600 ))
-    minutes=$(( (uptime_sec%3600)/60 ))
-
-    if [ $days -gt 0 ]; then
-        echo "${days}d ${hours}h ${minutes}m"
-    else
-        echo "${hours}h ${minutes}m"
-    fi
-}
-
-# Status Sertifikat (Contoh variabel, sesuaikan dengan sumber data Anda)
-Exp2="2025-12-31" # Contoh, ganti dengan cara Anda mendapatkan tanggal Exp2
-today=$(date +"%Y-%m-%d")
-
-d1=$(date -d "$Exp2" +%s)
-d2=$(date -d "$today" +%s)
-certificate=$(( (d1 - d2) / 86400 ))
-
-# IP, Waktu, Tanggal
-WKT=$(curl -s ipinfo.io/timezone) # Tanpa token jika tidak diperlukan
-DAY=$(date +%A)
-DATE=$(date +%m/%d/%Y)
-DATE2=$(date -R | cut -d " " -f -5)
-MYIP=$(curl -sS ipv4.icanhazip.com)
-
-# Membuat direktori dan file yang diperlukan jika belum ada
-cd
-if [ ! -d /etc/per ]; then
-    mkdir -p /etc/per
-    echo "" > /etc/per/id
-    echo "" > /etc/per/token
-fi
-if [ ! -d /etc/perlogin ]; then
-    mkdir -p /etc/perlogin
-    echo "" > /etc/perlogin/id
-    echo "" > /etc/perlogin/token
-fi
-if [ ! -f /usr/bin/idchat ]; then
-    echo "" > /usr/bin/idchat
-    echo "" > /usr/bin/token
-fi
-
-if [ ! -f /etc/xray/ssh ]; then
-    echo "" > /etc/xray/ssh
-fi
-if [ ! -d /etc/xray/sshx ]; then
-    mkdir -p /etc/xray/sshx
-fi
-if [ ! -f /etc/xray/sshx/listlock ]; then
-    echo "" > /etc/xray/sshx/listlock
-fi
-if [ ! -d /etc/vmess ]; then
-    mkdir -p /etc/vmess
-fi
-if [ ! -f /etc/vmess/listlock ]; then
-    echo "" > /etc/vmess/listlock
-fi
-if [ ! -d /etc/vless ]; then
-    mkdir -p /etc/vless
-fi
-if [ ! -f /etc/vless/listlock ]; then
-    echo "" > /etc/vless/listlock
-fi
-if [ ! -d /etc/trojan ]; then
-    mkdir -p /etc/trojan
-fi
-if [ ! -f /etc/trojan/listlock ]; then
-    echo "" > /etc/trojan/listlock
-fi
-
-# Penggunaan Vnstat
-vnstat_profile=$(vnstat | sed -n '3p' | awk '{print $1}' | grep -o '[^:]*')
-if [ -z "$vnstat_profile" ]; then
-    echo -e "${RED}⚠️ Profil Vnstat tidak ditemukan. Pastikan vnstat terinstal dan berjalan.${NC}"
-    today_rx="N/A"
-    today_tx="N/A"
-    month_rx="N/A"
-    month_tx="N/A"
-    yesterday_rx="N/A"
-    yesterday_tx="N/A"
-else
-    vnstat -i "${vnstat_profile}" >/etc/t1 # Menulis output vnstat ke file sementara
-    bulan=$(date +%b)
-    tahun=$(date +%y)
-    ba=$(curl -s https://pastebin.com/raw/0gWiX6hE || echo "")
+    # --- TAMPILAN PANEL & MENU ---
+    echo -e "$GREEN╭═══════════════════════════════════════════════════╮${NC}"
+    echo -e "$GREEN│${NC} ${WH}            • GENOM BOT TELEGRAM PRO •           ${NC} $GREEN│${NC}"
+    echo -e "$GREEN╰═══════════════════════════════════════════════════╯${NC}"
+    echo -e "$GREEN╭═══════════════════════════════════════════════════╮${NC}"
+    echo -e "$GREEN│ ${WH}Client Name    : ${GREEN}$client_name${NC}"
+    echo -e "$GREEN│ ${WH}Days Remaining : ${GREEN}$days_remaining hari${NC}"
+    echo -e "$GREEN├───────────────────────────────────────────────────┤${NC}"
+    echo -e "$GREEN│ ${WH}System OS      : ${CYAN}$MODEL2${NC}"
+    echo -e "$GREEN│ ${WH}Memory Usage   : ${CYAN}$uram / $tram${NC}"
+    echo -e "$GREEN│ ${WH}CPU Usage      : ${CYAN}$LOADCPU% (${CORE} Core)${NC}"
+    echo -e "$GREEN│ ${WH}ISP / City     : ${CYAN}$ISP / $CITY${NC}"
+    echo -e "$GREEN│ ${WH}Domain         : ${CYAN}$(cat /etc/xray/domain 2>/dev/null || echo "Not Set")${NC}"
+    echo -e "$GREEN│ ${WH}IP-VPS         : ${CYAN}$IP_VPS${NC}"
+    echo -e "$GREEN│ ${WH}Uptime         : ${CYAN}$SERONLINE${NC}"
+    echo -e "$GREEN╰═══════════════════════════════════════════════════╯${NC}"
     
-    today_rx=$(vnstat -i "${vnstat_profile}" | grep today | awk '{print $2}')
-    today_rxv=$(vnstat -i "${vnstat_profile}" | grep today | awk '{print $3}')
-    today_tx=$(vnstat -i "${vnstat_profile}" | grep today | awk '{print $5}')
-    today_txv=$(vnstat -i "${vnstat_profile}" | grep today | awk '{print $6}')
+    # --- PANEL STATUS SERVER GAYA BARU ---
+    echo -e "$BLUE╔════════════════════════════════════════════════════╗${NC}"
+    echo -e "$BLUE║${CYAN}     🚀   S T A T U S   S E R V E R   🚀            ${BLUE}║${NC}"
+    echo -e "$BLUE╠════════════════════════════════════════════════════╣${NC}"
+    echo -e "$BLUE║${WH}🌐WS:$status_ws |${WH}⚡XRAY:$status_xray | ${WH}🖥️ NGINX:$status_nginx |${WH}🔒DB:$status_beruangjatuh | ${WH}🤖BOT:$status_bot${BLUE} ║${NC}"
+    echo -e "$BLUE╚════════════════════════════════════════════════════╝${NC}"
 
-    if [ "$(grep -wc "${bulan}" /etc/t1)" != '0' ]; then
-        month_rx=$(vnstat -i "${vnstat_profile}" | grep "${bulan} ${ba}${tahun}" | awk '{print $3}')
-        month_rxv=$(vnstat -i "${vnstat_profile}" | grep "${bulan} ${ba}${tahun}" | awk '{print $4}')
-        month_tx=$(vnstat -i "${vnstat_profile}" | grep "${bulan} ${ba}${tahun}" | awk '{print $6}')
-        month_txv=$(vnstat -i "${vnstat_profile}" | grep "${bulan} ${ba}${tahun}" | awk '{print $7}')
-    else
-        bulan2=$(date +%Y-%m)
-        month_rx=$(vnstat -i "${vnstat_profile}" | grep "${bulan2} " | awk '{print $2}')
-        month_rxv=$(vnstat -i "${vnstat_profile}" | grep "${bulan2} " | awk '{print $3}')
-        month_tx=$(vnstat -i "${vnstat_profile}" | grep "${bulan2} " | awk '{print $5}')
-        month_txv=$(vnstat -i "${vnstat_profile}" | grep "${bulan2} " | awk '{print $6}')
-    fi
+    # --- MENU UTAMA BARU ---
+    echo -e "$GREEN╭═══════════════════════════════════════════════════╮${NC}"
+    echo -e "$GREEN│                   ${WH}MENU UTAMA${NC}                      ${GREEN}│${NC}"
+    echo -e "$GREEN├───────────────────────────────────────────────────┤${NC}"
+    echo -e "$GREEN│ ${WH}[1] Install Bot SSH & XRAY   ${WH}[4] Setting          ${GREEN}│${NC}"
+    echo -e "$GREEN│ ${WH}[2] Cek Status Bot           ${WH}[5] Info VPS         ${GREEN}│${NC}"
+    echo -e "$GREEN│ ${WH}[3] Restart Layanan Bot      ${WH}[0] Exit             ${GREEN}│${NC}"
+    echo -e "$GREEN╰═══════════════════════════════════════════════════╯${NC}"
+    echo -ne "  ${WH}Masukkan pilihan Anda [0-5]: ${NC}"
+}
+
+# =============================================
+#           [ Loop Menu Utama ]
+# =============================================
+while true; do
+    show_main_menu
+    read -r choice
     
-    if [ "$(grep -wc yesterday /etc/t1)" != '0' ]; then
-        yesterday_rx=$(vnstat -i "${vnstat_profile}" | grep yesterday | awk '{print $2}')
-        yesterday_rxv=$(vnstat -i "${vnstat_profile}" | grep yesterday | awk '{print $3}')
-        yesterday_tx=$(vnstat -i "${vnstat_profile}" | grep yesterday | awk '{print $5}')
-        yesterday_txv=$(vnstat -i "${vnstat_profile}" | grep yesterday | awk '{print $6}')
-    else
-        yesterday_rx="NULL"
-        yesterday_rxv="NULL"
-        yesterday_tx="NULL"
-        yesterday_txv="NULL"
-    fi
-    rm -f /etc/t1 # Hapus file sementara
-fi
-
-# =============================================
-#           [ Pengecekan Status Layanan ]
-# =============================================
-
-# // SSH Websocket Proxy
-ssh_ws=$( systemctl status ws-stunnel | grep Active | awk '{print $3}' | sed 's/(//g' | sed 's/)//g' )
-if [[ "$ssh_ws" == "running" ]]; then
-    status_ws="${COLOR1}ON${NC}"
-else
-    status_ws="${RED}OFF${NC}"
-fi
-
-# // Nginx
-nginx=$( systemctl status nginx | grep Active | awk '{print $3}' | sed 's/(//g' | sed 's/)//g' )
-if [[ "$nginx" == "running" ]]; then
-    status_nginx="${COLOR1}ON${NC}"
-else
-    status_nginx="${RED}OFF${NC}"
-    systemctl start nginx 2>/dev/null # Mencoba memulai Nginx jika mati
-fi
-
-# // Dropbear
-dropbear_status=$(/etc/init.d/dropbear status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
-if [[ "$dropbear_status" == "running" ]]; then
-   status_beruangjatuh="${COLOR1}ON${NC}"
-else
-   status_beruangjatuh="${RED}OFF${NC}"
-fi
-
-# // Xray
-xray=$(systemctl status xray | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
-if [[ "$xray" == "running" ]]; then
-    status_xray="${COLOR1}ON${NC}"
-else
-    status_xray="${RED}OFF${NC}"
-fi
-
-# STATUS EXPIRED ACTIVE (Sudah diperbaiki)
-Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
-Info="${Green_font_prefix}( Registered )${Font_color_suffix}"
-Error="${Green_font_prefix}${Font_color_suffix}${Red_font_prefix}[ EXPIRED ]${Font_color_suffix}"
-
-# Ambil nilai Exp2 dari sumber yang valid, contoh:
-# Exp2=$(cat /etc/xray/exp_date_xray)
-# Jika tidak ada sumber spesifik, gunakan contoh atau kosongkan
-#today=$(date +"%Y-%m-%d") # Sudah didefinisikan sebelumnya
-
-if [[ "$today" < "$Exp2" ]]; then
-    sts="${Info}"
-else
-    sts="${Error}"
-fi
-
-# TOTAL ACC CREATE VMESS WS
-vmess=$(grep -c -E "^#vmg " "/etc/xray/config.json")
-# TOTAL ACC CREATE  VLESS WS
-vless=$(grep -c -E "^#vlg " "/etc/xray/config.json")
-# TOTAL ACC CREATE  TROJAN
-trtls=$(grep -c -E "^#trg " "/etc/xray/config.json")
-# TOTAL ACC CREATE OVPN SSH
-total_ssh=$(grep -c -E "^### " "/etc/xray/ssh")
-
-# =============================================
-#           [ FUNGSI MENU TEMA ]
-# =============================================
-show_header_theme() {
-    echo -e " ${COLOR1}╔════════════════════════════════════════════════════╗${NC}"
-    echo -e " ${COLOR1}║${COLBG1}              ${WH}• THEMES PANEL MENU •            ${NC}${COLOR1}║"
-    echo -e " ${COLOR1}╚════════════════════════════════════════════════════╝${NC}"
-}
-
-show_options_theme() {
-    echo -e " ${COLOR1}╔════════════════════════════════════════════════════╗${NC}"
-    echo -e " ${COLOR1}║ ${WH}[01]${NC} ${COLOR1}• ${WH}COLOR RED         ${WH}[04]${NC} ${COLOR1}• ${WH}COLOR GREEN      ${COLOR1}║${NC}"
-    echo -e " ${COLOR1}║ ${WH}[02]${NC} ${COLOR1}• ${WH}COLOR YELLOW      ${WH}[05]${NC} ${COLOR1}• ${WH}COLOR BLUE       ${COLOR1}║${NC}"
-    echo -e " ${COLOR1}║ ${WH}[03]${NC} ${COLOR1}• ${WH}COLOR MAGENTA     ${WH}[06]${NC} ${COLOR1}• ${WH}COLOR CYAN       ${COLOR1}║${NC}"
-    echo -e " ${COLOR1}╚════════════════════════════════════════════════════╝${NC}"
-}
-
-show_footer_theme() {
-    local author=$(cat "$AUTHOR_FILE" 2>/dev/null || echo "Unknown")
-    echo -e " ${COLOR1}╔══════════════════════ ${WH}CREDIT BY${NC} ${COLOR1}═══════════════════╗${NC}"
-    echo -e " ${COLOR1}║                 ${WH}• HOKAGE LEGEND STORE •                 ${COLOR1}║${NC}"
-    echo -e " ${COLOR1}╚════════════════════════════════════════════════════╝${NC}"
-}
-
-change_theme() {
-    local new_color=$1
-    echo "${new_color}" > "${COLOR_CONF}"
-    load_colors # Muat ulang warna setelah perubahan
-    echo -e ""
-    echo -e "  ${COLOR1}════════════════════════════════════════════════════${NC}"
-    echo -e "      ${WH}SUCCESS: ${COLOR1}Tema berhasil diubah menjadi ${WH}${new_color}${NC}"
-    sleep 1
-}
-
-# Fungsi untuk menampilkan menu tema
-m-theme() {
-    clear
-    show_header_theme
-    show_options_theme
-    show_footer_theme
-
-    echo -ne "\n ${WH}Pilih menu ${COLOR1}: ${WH}"
-    read -r colormenu
-
-    case $colormenu in
-        01|1) change_theme "red" ;;
-        02|2) change_theme "yellow" ;;
-        03|3) change_theme "magenta" ;;
-        04|4) change_theme "green" ;;
-        05|5) change_theme "blue" ;;
-        06|6) change_theme "cyan" ;;
-        00|0) clear; menu ;; # Kembali ke menu utama
-        *) echo -e "${RED}Pilihan tidak valid!${NC}"; sleep 1; m-theme ;; # Tetap di menu tema jika input salah
+    case $choice in
+        1)
+            echo -e "\n${YELLOW}Mempersiapkan instalasi Bot Telegram...${NC}"
+            cd /root
+            rm -f install-boot
+            wget -q https://github.com/hokagelegend9999/Telegram-bot/raw/refs/heads/main/install-boot && chmod +x install-boot && ./install-boot
+            read -n 1 -s -r -p "Instalasi selesai. Tekan tombol apa saja untuk kembali..."
+            ;;
+        2)
+            echo -e "\n${YELLOW}Mengecek status Bot Telegram...${NC}"
+            systemctl status hokage-bot.service
+            read -n 1 -s -r -p "Tekan tombol apa saja untuk kembali..."
+            ;;
+        3)
+            echo -e "\n${YELLOW}Me-restart layanan Bot Telegram...${NC}"
+            systemctl restart hokage-bot.service
+            echo -e "${GREEN}Layanan Bot Telegram berhasil di-restart.${NC}"
+            sleep 1
+            read -n 1 -s -r -p "Tekan tombol apa saja untuk kembali..."
+            ;;
+        4)
+            echo -e "\n${CYAN}Menu 'Setting' belum diimplementasikan.${NC}"
+            sleep 1
+            read -n 1 -s -r -p "Tekan tombol apa saja untuk kembali..."
+            ;;
+        5)
+            echo -e "\n${CYAN}Menu 'Info VPS' belum diimplementasikan.${NC}"
+            echo -e "${WH}Panel informasi sudah ditampilkan di atas.${NC}"
+            sleep 1
+            read -n 1 -s -r -p "Tekan tombol apa saja untuk kembali..."
+            ;;
+        0)
+            echo -e "\n${RED}Keluar dari skrip...${NC}"
+            exit 0
+            ;;
+        *)
+            echo -e "\n${RED}Pilihan tidak valid! Silakan coba lagi.${NC}"
+            sleep 1
+            ;;
     esac
-
-    echo -e "\n${NC}"
-    read -n 1 -s -r -p "     Tekan sembarang tombol untuk kembali ke menu utama..."
-    clear
-    menu # Pastikan menu utama dipanggil setelah interaksi dengan menu tema
-}
-
-echo -e ""
-echo -e "\e[1;33m ---------------------------------------------------\e[0m"
-echo -e "\e[1;34m                       MENU                       \e[0m"
-echo -e "\e[1;33m ---------------------------------------------------\e[0m"
-echo -e   ""
-echo -e "\e[1;36m 1 \e[0m: Menu SSH                \e[1;36m 6 \e[0m: Menu Setting"
-echo -e "\e[1;36m 2 \e[0m: Menu Vmess              \e[1;36m 7 \e[0m: Status Service"
-echo -e "\e[1;36m 3 \e[0m: Menu Vless              \e[1;36m 8 \e[0m: Clear RAM Cache"
-echo -e "\e[1;36m 4 \e[0m: Menu Trojan             \e[1;36m 9 \e[0m: Reboot VPS"
-echo -e "\e[1;36m 5 \e[0m: Menu Shadowsocks        \e[1;36m 10 \e[0m: Backup/Restore"                                     
-echo -e "\e[1;33m -----------------------------------------------------\e[0m"
-echo -e "\e[1;34m            x \e[0m:Press (x) To Exit Script"    
-echo -e "\e[1;33m -------------------------------------------------------\e[0m"
-echo -e "\e[1;32m Client Name \e[0m: $Name"
-echo -e "\e[1;32m Expired     \e[0m: $REMAINING_STATUS"
-echo -e "\e[1;33m ---------------------------------------------------\e[0m"
-echo -e   ""
-echo -e "\e[1;36m --------SCRIPT VPN PREMIUM LITE SUPER---------------\e[0m"
-echo -e   ""
-echo -e   ""
-echo -e "\e[1;36m ------------DEVELOP HOKAGE LEGEND------------------\e[0m"
-echo -e   ""
-read -p " Select menu :  "  opt
-echo -e   ""
-case $opt in
-1) clear ; m-sshovpn ;;
-2) clear ; m-vmess ;;
-3) clear ; m-vless ;;
-4) clear ; m-trojan ;;
-5) clear ; m-ssws ;;
-6) clear ; m-system ;;
-7) clear ; running ;;
-8) clear ; clearcache ;;
-10) clear ; m-bkp ;;
-9) clear ; reboot ; /sbin/reboot ;;
-x) exit ;;
-*) echo "Anda salah tekan " ; sleep 1 ; menu ;;
-esac
+done
