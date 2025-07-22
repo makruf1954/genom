@@ -496,8 +496,8 @@ echo -e "$COLOR1 ${NC} ${WH}  • HOKAGE LEGEND STORE •     " | tee -a /etc/vm
 echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}" | tee -a /etc/vmess/akun/log-create-${user}.log
 echo "" | tee -a /etc/vmess/akun/log-create-${user}.log
 mkdir -p /etc/vmess/akun
-cat > /etc/vmess/akun/$user << EOF
-username=$user
+cat > /etc/vmess/akun/${user} << EOF
+username=${user}
 limit_quota=${Quota}GB
 usage_quota=0MB
 login_time=$(date +'%H:%M:%S.%N')
