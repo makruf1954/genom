@@ -54,6 +54,7 @@ echo -e " [\e[36m•2\e[0m] Check Limit Ip User"
 echo -e " [\e[36m•3\e[0m] Tweak TCP"
 echo -e " [\e[36m•4\e[0m] TROJAN-USER"
 echo -e " [\e[36m•5\e[0m] All Xray Kuota User IP"
+echo -e " [\e[36m•5\e[0m] VLESS-USER"
 echo -e "" 
 echo -e " [\e[31m•0\e[0m] \e[31mBack To Menu\033[0m"
 echo -e "" 
@@ -67,6 +68,7 @@ case $opt in
 03 | 3) clear ; m-tcp ;;
 04 | 4) clear ; online-trojan ;;
 05 | 5) clear ; online-xray ;;
+06 | 6) clear ; online-vless ;;
 00 | 0) clear ; menu ;;
 *) clear ; online ;;
 esac
