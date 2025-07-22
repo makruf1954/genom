@@ -137,6 +137,7 @@ wget -q -O /usr/bin/admin "https://raw.githubusercontent.com/hokagelegend9999/ge
 wget -q -O /usr/bin/online-vmess "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-vmess" && chmod +x /usr/bin/online-vmess
 wget -q -O /usr/bin/online-vless "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-vless" && chmod +x /usr/bin/online-vless
 wget -q -O /usr/bin/online-trojan "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-trojan" && chmod +x /usr/bin/online-trojan
+wget -q -O /usr/bin/online-sshws "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/online-sshws" && chmod +x /usr/bin/online-sshws
 
 
 clear
