@@ -49,10 +49,10 @@ echo -e "\e[33m━━━━━━━━━━━━━━━━━━━━━�
 echo -e "         • ALL USER ONLINE MONITOR •         "
 echo -e "\e[33m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "" 
-echo -e " [\e[36m•1\e[0m] Trojan User"
+echo -e " [\e[36m•1\e[0m] VMESS-USER"
 echo -e " [\e[36m•2\e[0m] Check Limit Ip User"
 echo -e " [\e[36m•3\e[0m] Tweak TCP"
-echo -e " [\e[36m•4\e[0m] Trojan Kuota User IP"
+echo -e " [\e[36m•4\e[0m] TROJAN-USER"
 echo -e " [\e[36m•5\e[0m] All Xray Kuota User IP"
 echo -e "" 
 echo -e " [\e[31m•0\e[0m] \e[31mBack To Menu\033[0m"
@@ -62,7 +62,7 @@ echo -e ""
 read -p " Select menu :  "  opt
 echo -e   ""
 case $opt in
-01 | 1) clear ; trojan-online ;;
+01 | 1) clear ; online-vmess ;;
 02 | 2) clear ; ceklimit ;;
 03 | 3) clear ; m-tcp ;;
 04 | 4) clear ; online-trojan ;;
