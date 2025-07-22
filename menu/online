@@ -49,12 +49,14 @@ echo -e "\e[33m━━━━━━━━━━━━━━━━━━━━━�
 echo -e "         • ALL USER ONLINE MONITOR •         "
 echo -e "\e[33m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "" 
-echo -e " [\e[36m•1\e[0m] VMESS-USER"
-echo -e " [\e[36m•2\e[0m] Check Limit Ip User"
-echo -e " [\e[36m•3\e[0m] Tweak TCP"
-echo -e " [\e[36m•4\e[0m] TROJAN-USER"
-echo -e " [\e[36m•5\e[0m] All Xray Kuota User IP"
-echo -e " [\e[36m•6\e[0m] VLESS-USER"
+echo -e " [\e[36m•1\e[0m] CEK SSHWS ONLINE"
+echo -e " [\e[36m•2\e[0m] CEK VMESS ONLINE"
+echo -e " [\e[36m•3\e[0m] CEK VLESS ONLINE"
+echo -e " [\e[36m•4\e[0m] CEK TROJAN ONLINE"
+echo -e " [\e[36m•5\e[0m] ALL XRAY ONLINE & IP"
+echo -e " [\e[36m•6\e[0m] CEK LIMIT USER"
+echo -e " [\e[36m•7\e[0m] TWEAK TCP/BBR"
+
 echo -e "" 
 echo -e " [\e[31m•0\e[0m] \e[31mBack To Menu\033[0m"
 echo -e "" 
@@ -63,12 +65,13 @@ echo -e ""
 read -p " Select menu :  "  opt
 echo -e   ""
 case $opt in
-01 | 1) clear ; online-vmess ;;
-02 | 2) clear ; ceklimit ;;
-03 | 3) clear ; m-tcp ;;
+01 | 1) clear ; online-sshws ;;
+02 | 2) clear ; online-vmess ;;
+03 | 3) clear ; online-vless ;;
 04 | 4) clear ; online-trojan ;;
 05 | 5) clear ; online-xray ;;
-06 | 6) clear ; online-vless ;;
+06 | 6) clear ; ceklimit ;;
+07 | 7) clear ; m-tcp ;;
 00 | 0) clear ; menu ;;
 *) clear ; online ;;
 esac
