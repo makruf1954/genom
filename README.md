@@ -17,6 +17,8 @@ EMAIL="ISI EMAIL SUBDOMAIN"
 # Jalankan semuanya secara urut:
 
 ```
+DOMAIN="ISI SUBDOMAIN"
+EMAIL="ISI EMAIL SUBDOMAIN"
 /root/.acme.sh/acme.sh --set-default-ca --server zerossl && \
 /root/.acme.sh/acme.sh --register-account -m "$EMAIL" --server zerossl && \
 /root/.acme.sh/acme.sh --issue --standalone -d "$DOMAIN" -k ec-256 && \
