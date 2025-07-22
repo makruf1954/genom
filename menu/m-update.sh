@@ -138,7 +138,7 @@ wget -q -O /usr/bin/backup "https://github.com/hokagelegend9999/genom/raw/refs/h
 wget -q -O /usr/bin/restore "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/restore" && chmod +x /usr/bin/restore
 wget -q -O /usr/bin/admin "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/admin" && chmod +x /usr/bin/admin
 wget -q -O /usr/bin/online-vmess "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-vmess" && chmod +x /usr/bin/online-vmess
-wget -q -O /usr/bin/online-vmess "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-vmess" && chmod +x /usr/bin/online-vless
+wget -q -O /usr/bin/online-vless "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-vless" && chmod +x /usr/bin/online-vless
 wget -q -O /usr/bin/online-trojan "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-trojan" && chmod +x /usr/bin/online-trojan
 
 
