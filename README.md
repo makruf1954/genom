@@ -10,11 +10,7 @@ wget https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/update.s
 ```
 
 #### ALTERNATIF CERT :
-# Ganti sesuai domain kamu
-DOMAIN="ISI SUBDOMAIN"
-EMAIL="ISI EMAIL SUBDOMAIN"
 
-# Jalankan semuanya secara urut:
 
 ```
 DOMAIN="ISI SUBDOMAIN"
