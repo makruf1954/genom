@@ -1,25 +1,18 @@
 #!/bin/bash
 
-# Warna
-DF='\e[39m'
-Bold='\e[1m'
-Blink='\e[5m'
-yell='\e[33m'
-red='\e[31m'
-green='\e[32m'
-blue='\e[34m'
-PURPLE='\e[35m'
-cyan='\e[36m'
-Lred='\e[91m'
-Lgreen='\e[92m'
-Lyellow='\e[93m'
-NC='\e[0m'
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-LIGHT='\033[0;37m'
-grenbo="\e[92;1m"
-
 clear
+
+# =============================================
+#           [ Konfigurasi Warna ]
+# =============================================
+export RED='\033[0;31m'
+export GREEN='\033[0;32m'
+export YELLOW='\033[0;33m'
+export BLUE='\033[0;34m'
+export CYAN='\033[0;36m'
+export WHITE='\033[97m'
+export BG_BLUE='\033[44m'
+export NC='\033[0m'
 
 # Fungsi konversi byte
 function con() {
@@ -35,13 +28,14 @@ function con() {
     fi
 }
 
-# Mulai pengecekan akun trojan
+# Header dengan background biru dan teks putih
+echo -e "${BLUE}┌─────────────────────────────────────────────────┐${NC}"
+echo -e "${BLUE}│${NC}${BG_BLUE}${WHITE}             • TROJAN USER ONLINE •              ${NC}${BLUE}│${NC}"
+echo -e "${BLUE}└─────────────────────────────────────────────────┘${NC}"
+
+# Inisialisasi
 echo -n > /tmp/other.txt
 data=( $(grep "^#trg" /etc/xray/config.json | cut -d ' ' -f 2 | sort | uniq) )
-
-echo -e "\033[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo -e " \e[1;97;101m           CEK TROJAN ACCOUNT           \e[0m"
-echo -e "\033[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 
 for akun in "${data[@]}"; do
     [[ -z "$akun" ]] && continue
@@ -62,19 +56,18 @@ for akun in "${data[@]}"; do
 
     jum=$(cat /tmp/iptrojan.txt)
     if [[ -n "$jum" ]]; then
-        # Cek file akun dan data terkait
         akun_file="/etc/trojan/akun/${akun}"
         limit_file="/etc/limit/trojan/${akun}"
         quota_file="/etc/trojan/${akun}"
 
-        # Ambil nilai IP limit
+        # Data IP limit
         if [[ -f "$akun_file" ]]; then
             iplimit=$(grep ^login_ip "$akun_file" | cut -d= -f2)
         else
             iplimit="?"
         fi
 
-        # Ambil quota limit dan usage
+        # Data limit & usage
         if [[ -f "$limit_file" ]]; then
             wey=$(cat "$limit_file")
             gb=$(con "$wey")
@@ -92,20 +85,23 @@ for akun in "${data[@]}"; do
         lastlogin=$(grep -w "$akun" /var/log/xray/access.log | tail -n 500 | cut -d " " -f 2 | tail -1)
         jum2=$(wc -l < /tmp/iptrojan.txt)
 
-        echo -e " \033[1;36m┌──────────────────────────────────────┐\033[0m"
-        printf "  %-13s %s\n" "UserName :" "$akun"
-        printf "  %-13s %s\n" "Login    :" "$lastlogin"
-        printf "  %-13s %s\n" "Usage Quota :" "$gb"
-        printf "  %-13s %s\n" "Limit Quota :" "$lim"
-        printf "  %-13s %s\n" "Limit IP :" "$iplimit"
-        printf "  %-13s %s\n" "Login IP :" "$jum2"
-        echo -e " \033[1;36m└──────────────────────────────────────┘\033[0m"
+        # Tampilkan info akun
+        echo -e "${CYAN} ┌──────────────────────────────────────┐${NC}"
+        printf "  %-13s ${WHITE}%s${NC}\n" "UserName :" "$akun"
+        printf "  %-13s ${WHITE}%s${NC}\n" "Login    :" "$lastlogin"
+        printf "  %-13s ${WHITE}%s${NC}\n" "Usage Quota :" "$gb"
+        printf "  %-13s ${WHITE}%s${NC}\n" "Limit Quota :" "$lim"
+        printf "  %-13s ${WHITE}%s${NC}\n" "Limit IP :" "$iplimit"
+        printf "  %-13s ${WHITE}%s${NC}\n" "Login IP :" "$jum2"
+        echo -e "${CYAN} └──────────────────────────────────────┘${NC}"
     fi
 
     rm -f /tmp/iptrojan.txt
 done
 
 rm -f /tmp/other.txt
+
+# Footer
 echo ""
-echo -e "\033[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
