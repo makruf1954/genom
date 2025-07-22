@@ -60,15 +60,16 @@ rm -rf trojan
 rm -rf vless
 rm -rf vmess
 rm -rf insshws
-rm -rf trojan-online
 rm -rf online
 rm -rf ceklimit
 rm -rf online-xray
-rm -rf online-trojan
 rm -rf atur-backup
 rm -rf backup
 rm -rf restore
 rm -rf admin
+rm -rf online-vmess
+rm -rf online-vless
+rm -rf online-troja
 
 fun_bar() {
     CMD[0]="$1"
@@ -133,10 +134,12 @@ wget -q -O /usr/bin/ceklimit "https://raw.githubusercontent.com/hokagelegend9999
 wget -q -O /usr/bin/online "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/online" && chmod +x /usr/bin/online
 wget -q -O /usr/bin/atur-backup "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/atur-backup" && chmod +x /usr/bin/atur-backup
 wget -q -O /usr/bin/online-xray "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-xray" && chmod +x /usr/bin/online-xray
-wget -q -O /usr/bin/online-trojan "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-trojan" && chmod +x /usr/bin/online-trojan
 wget -q -O /usr/bin/backup "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/backup" && chmod +x /usr/bin/backup
 wget -q -O /usr/bin/restore "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/restore" && chmod +x /usr/bin/restore
 wget -q -O /usr/bin/admin "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/admin" && chmod +x /usr/bin/admin
+wget -q -O /usr/bin/online-vmess "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-vmess" && chmod +x /usr/bin/online-vmess
+wget -q -O /usr/bin/online-vmess "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-vmess" && chmod +x /usr/bin/online-vless
+wget -q -O /usr/bin/online-trojan "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-trojan" && chmod +x /usr/bin/online-trojan
 
 
 chmod +x m-tcp
@@ -191,6 +194,9 @@ chmod +x online-trojan
 chmod +x backup
 chmod +x restore
 chmod +x admin
+chmod +x online-vmess
+chmod +x online-vless
+chmod +x online-trojan
 clear
 
 }
