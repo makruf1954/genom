@@ -1,114 +1,118 @@
 #!/bin/bash
 
-# ========================
-# Skrip Cek Penggunaan Kuota Xray - Versi Final Diperbaiki
-# ========================
+# =======================================================
+#             🎨 [ KONFIGURASI TAMPILAN ] 🎨
+# =======================================================
+# --- Warna Dasar ---
+export RED='\033[0;31m'
+export GREEN='\033[0;32m'
+export YELLOW='\033[0;33m'
+export BLUE='\033[0;34m'
+export CYAN='\033[0;36m'
+export WHITE='\033[97m'
+export NC='\033[0m' # No Color
 
-# === Fungsi dan Variabel (disatukan agar lebih rapi) ===
-# Variabel Konfigurasi
-CONFIG_FILE="/etc/xray/config.json"
-LOG_FILE="/var/log/xray/access.log"
-API_PORT="10085"
-STATS_DIR="/var/lib/xray-stats"
-RECENT_LOG_LINES_FOR_ONLINE_STATUS=200
+# --- Warna Latar Belakang & Gaya ---
+export BG_BLUE='\033[44m'
+export BOLD='\033[1m'
+# =======================================================
 
-# [PERBAIKAN] Pastikan direktori untuk menyimpan statistik ada sebelum digunakan
-mkdir -p "$STATS_DIR"
-
-# Fungsi format bytes
-format_bytes() {
-    local bytes=$1
-    if (( bytes < 1024 )); then
-        printf "%7s" "$bytes B"
-    elif (( bytes < 1048576 )); then
-        printf "%7.2f KB" "$(echo "scale=2; $bytes/1024" | bc)"
-    elif (( bytes < 1073741824 )); then
-        printf "%7.2f MB" "$(echo "scale=2; $bytes/1073741824" | bc)"
-    else
-        printf "%7.2f GB" "$(echo "scale=2; $bytes/1073741824" | bc)"
-    fi
-}
-
-# Fungsi ambil jumlah IP unik login user
-get_ip_count() {
-    grep "email: $1" "$LOG_FILE" | grep -w "accepted" | grep -oE "([0-9]{1,3}\.){3}[0-9]{1,3}" | sort -u | wc -l
-}
-
-# === Awal Skrip ===
-# Ambil daftar user/email dari config.json
-USERS=$(grep -oP '"email"\s*:\s*"\K[^"]+' /etc/xray/config.json | sort -u)
-
-if [ -z "$USERS" ]; then
-    echo "Tidak ada pengguna yang ditemukan di konfigurasi."
-    exit 0
-fi
-
-# Header
 clear
-echo "    __  ______  __ __ ___   ____________  "
-echo "   / / / / __ \/ //_//   | / ____/ ____/   "
-echo "  / /_/ / / / / ,<  / /| |/ / __/ __/      "
-echo " / __  / /_/ / /| |/ ___ / /_/ / /___      "
-echo "/_/ /_/\____/_/ |_/_/  |_\____/_____/      "
-echo ""
-echo "===================================================="
-echo "        PEMAKAIAN KUOTA PENGGUNA XRAY HARIAN        "
-echo "===================================================="
-echo "Last Update: $(date)"
-echo ""
 
-# Header tabel rapi
-border="+-----------------+-------------------------------+-----------+-------------------+-------------------+"
-printf "%s\n" "$border"
-printf "| \e[1;97;44m%-15s\e[0m | \e[1;97;42m%-29s\e[0m | \e[1;30;106m%-9s\e[0m | \e[1;30;103m%-17s\e[0m | \e[1;97;45m%-17s\e[0m |\n" \
-    "USERNAME" "STATUS" "JUMLAH IP" "KUOTA HARI INI" "TOTAL PENGGUNAAN"
-printf "%s\n" "$border"
+# =======================================================
+#                       🖥️ [ HEADER ] 🖥️
+# =======================================================
+printf '%b\n' "${BLUE}┌───────────────────────────────────────────────┐${NC}"
+# PERBAIKAN: Menambahkan '\n' di akhir format string ini
+printf '%b\n' "${BLUE}│${BG_BLUE}${WHITE}${BOLD}      💻 MONITORING PENGGUNA XRAY 💻      ${NC}${BLUE}│${NC}"
+printf '%b\n' "${BLUE}└───────────────────────────────────────────────┘${NC}"
+printf '\n'
+# =======================================================
 
+# Inisialisasi variabel penghitung
+total_user=0
+online_users=0
+total_usage_gb=0
 
-for user in $USERS; do
-    stat_file="${STATS_DIR}/${user}.log"
-    # Ambil statistik total dari API
-    uplink_raw=$(xray api stats --server=127.0.0.1:${API_PORT} -name "user>>>${user}>>>traffic>>>uplink" 2>/dev/null | grep -oP '"value": "\K[0-9]+' || echo 0)
-    downlink_raw=$(xray api stats --server=127.0.0.1:${API_PORT} -name "user>>>${user}>>>traffic>>>downlink" 2>/dev/null | grep -oP '"value": "\K[0-9]+' || echo 0)
-    
-    current_usage=$(( ${uplink_raw:-0} + ${downlink_raw:-0} ))
-    previous_total=$(cat "$stat_file" 2>/dev/null || echo 0)
-    new_total_usage=$(( previous_total + current_usage ))
-    echo "$new_total_usage" > "$stat_file"
-    xray api stats --server=127.0.0.1:${API_PORT} -name "user>>>${user}>>>traffic>>>uplink" -reset > /dev/null 2>&1
-    xray api stats --server=127.0.0.1:${API_PORT} -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
+# Ambil 500 baris log terakhir untuk pengecekan status
+LAST_LOGS=$(tail -n 500 /var/log/xray/access.log)
 
-    # Cek status online
-    last_ip=""
-    line=$(tail -n "$RECENT_LOG_LINES_FOR_ONLINE_STATUS" "$LOG_FILE" | grep "email: ${user}" | grep -w "accepted" | tail -n 1)
-    if [ -n "$line" ]; then
-        ip=$(echo "$line" | grep -oE "([0-9]{1,3}\.){3}[0-9]{1,3}" | head -n 1)
-        [ -n "$ip" ] && last_ip="$ip"
+# Loop untuk setiap jenis layanan (trojan, vless, vmess)
+for jenis in trojan vless vmess; do
+    dir="/etc/${jenis}/akun"
+    if [[ -d "$dir" ]]; then
+        for userfile in "$dir"/*; do
+            if [[ ! -f "$userfile" || "$userfile" == *log* ]]; then
+                continue
+            fi
+
+            username=$(grep -w "username" "$userfile" | cut -d= -f2)
+            [[ -z "$username" ]] && continue
+
+            limit_quota=$(grep -w "limit_quota" "$userfile" | cut -d= -f2)
+            usage_quota=$(grep -w "usage_quota" "$userfile" | cut -d= -f2)
+            
+            # --- Cek Status Online ---
+            is_online=false
+            if [[ "$jenis" == "trojan" ]]; then
+                if echo "$LAST_LOGS" | grep -qw "$username"; then
+                    is_online=true
+                fi
+            else
+                if echo "$LAST_LOGS" | grep -qw "email: $username"; then
+                    is_online=true
+                fi
+            fi
+
+            if [[ "$is_online" == true ]]; then
+                status_indicator="${GREEN}● Online${NC}"
+                online_users=$((online_users + 1))
+            else
+                status_indicator="${RED}● Offline${NC}"
+            fi
+
+            # --- Kalkulasi Kuota ---
+            used_num=$(echo "$usage_quota" | tr -dc '0-9.')
+            limit_num=$(echo "$limit_quota" | tr -dc '0-9.')
+            used_num=${used_num:-0}
+            limit_num=${limit_num:-0}
+
+            if [[ "$usage_quota" == *MB ]]; then
+                used_gb=$(awk "BEGIN {printf \"%.3f\", $used_num / 1024}")
+            else
+                used_gb=$(awk "BEGIN {printf \"%.3f\", $used_num}")
+            fi
+
+            if [[ "$limit_quota" == *GB ]] && (( $(echo "$limit_num > 0" | bc -l) )); then
+                remain_gb=$(awk "BEGIN {printf \"%.2f\", $limit_num - $used_gb}")
+            else
+                remain_gb="∞" # Unlimited
+            fi
+
+            # =======================================================
+            #                👤 [ KARTU PENGGUNA ] 👤
+            # =======================================================
+            printf " ${CYAN}┌─[ PENGGUNA: ${BOLD}${GREEN}%s${NC}${CYAN} ]${NC}\n" "$username"
+            printf " ${CYAN}│${NC} 🚦 ${WHITE}%-10s: %b\n" "Status" "$status_indicator"
+            printf " ${CYAN}│${NC} ⚡ ${WHITE}%-10s: ${CYAN}%s${NC}\n" "Tipe" "$jenis"
+            printf " ${CYAN}│${NC} 📈 ${WHITE}%-10s: ${YELLOW}%s${NC}\n" "Limit" "${limit_quota:-Unlimited}"
+            printf " ${CYAN}│${NC} 📥 ${WHITE}%-10s: ${RED}%s${NC}\n" "Terpakai" "${usage_quota:-0MB}"
+            printf " ${CYAN}│${NC} 📊 ${WHITE}%-10s: ${GREEN}%s GB${NC}\n" "Sisa" "$remain_gb"
+            printf " ${CYAN}└──────────────────────────────────────────${NC}\n\n"
+            # =======================================================
+
+            total_user=$((total_user + 1))
+            total_usage_gb=$(awk "BEGIN {printf \"%.3f\", $total_usage_gb + $used_gb}")
+        done
     fi
-
-    # Siapkan variabel untuk ditampilkan
-    if [ -n "$last_ip" ]; then
-        status_text="Online ($last_ip)"
-        status_style="\e[1;32m\e[5m" # Hijau Terang + Blink
-    else
-        status_text="Offline"
-        status_style="\e[1;31m" # Merah Terang
-    fi
-    
-    ip_count=$(get_ip_count "$user")
-    
-    # Untuk "KUOTA HARI INI", kita gunakan data "current_usage" karena statistik direset setiap skrip jalan
-    # Jika cron diatur per 24 jam, ini akan menjadi kuota harian.
-    # Jika lebih sering, ini adalah kuota sejak pengecekan terakhir.
-    today_usage_formatted=$(format_bytes $current_usage)
-    total_usage_formatted=$(format_bytes $new_total_usage)
-
-    # Print data rata
-    printf "| \e[1;34m%-15s\e[0m | ${status_style}%-29s\e[0m | \e[1;36m%-9s\e[0m | \e[1;33m%17s\e[0m | \e[1;35m%17s\e[0m |\n" \
-        "$user" "$status_text" "$ip_count" "$today_usage_formatted" "$total_usage_formatted"
-    printf "%s\n" "$border"
 done
 
-echo ""
-echo "Proses selesai."
-echo "HOKAGE LEGEND"
+# =======================================================
+#                   📊 [ RINGKASAN TOTAL ] 📊
+# =======================================================
+printf '%b' "${BLUE}┌─[ RINGKASAN ]───────────────────────────┐${NC}\n"
+printf "${BLUE}│${NC} 👥 ${WHITE}%-16s: ${GREEN}%-18s ${BLUE}│${NC}\n" "Total Pengguna" "$total_user"
+printf "${BLUE}│${NC} 🟢 ${WHITE}%-16s: ${GREEN}%-18s ${BLUE}│${NC}\n" "Pengguna Online" "$online_users"
+printf "${BLUE}│${NC} 💾 ${WHITE}%-16s: ${RED}%-18s ${BLUE}│${NC}\n" "Total Pemakaian" "$(printf "%.2f" $total_usage_gb)GB"
+printf '%b' "${BLUE}└───────────────────────────────────────────┘${NC}\n"
+# =======================================================
