@@ -361,6 +361,14 @@ echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}
 echo -e "$COLOR1 ${NC} ${WH} • HOKAGE LEGEND STORE •    " | tee -a /etc/vless/akun/log-create-${user}.log
 echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}" | tee -a /etc/vless/akun/log-create-${user}.log
 echo "" | tee -a /etc/vless/akun/log-create-${user}.log
+mkdir -p /etc/vless/akun
+cat > /etc/vless/akun/${user} << EOF
+username=${user}
+limit_quota=${Quota}GB
+usage_quota=0MB
+login_time=$(date +'%H:%M:%S.%N')
+login_ip=0
+EOF
 systemctl restart xray > /dev/null 2>&1
 read -n 1 -s -r -p "Press any key to back on menu"
 menu
