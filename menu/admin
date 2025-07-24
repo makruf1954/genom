@@ -58,10 +58,11 @@ permission_file=$(curl -s --connect-timeout 10 https://github.com/hokagelegend99
 
 # Validasi file permission
 if [ -z "$permission_file" ]; then
-    echo -e "${RED}===========================================================================.${NC}"
-    echo -e "${RED}🚫 Akses Ditolak! Script bot Telegram ini eksklusif hanya untuk PEMILIK & PEMBELI resmi Genom Pro.${NC}"
-    echo -e "${YELLOW}⚡️ Segera aktifkan Genom Pro sekarang dan nikmati fitur-fitur premium super keren lainnya! 🚀${NC}"
-    echo -e "${RED}===========================================================================.${NC}"
+echo -e "${PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${RED}🛑  ${YELLOW}AKSES DITOLAK!${NC} ${RED}Script Bot Telegram ini hanya untuk${NC} ${CYAN}🔐 PEMILIK & PEMBELI RESMI Genom Pro${NC}"
+echo -e "${BLUE}💡  Ingin menikmati fitur lengkap seperti${NC} ${GREEN}🧠 Auto-response${NC}, ${GREEN}⚙️ Multi-tools${NC}, dan ${GREEN}📊 Statistik pintar${NC}?"
+echo -e "${YELLOW}🚀  Segera aktifkan Genom Pro sekarang dan buka semua fitur premium-nya!${NC}"
+echo -e "${PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
     exit 1
 fi
