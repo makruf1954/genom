@@ -28,39 +28,72 @@ spinner() {
 }
 
 # Getting bot info
+# Pastikan file ini ada dan berisi informasi yang benar
+if [ ! -f "/usr/bin/idchat" ] || [ ! -f "/usr/bin/token" ]; then
+    echo -e "${RED}File idchat atau token tidak ditemukan. Harap periksa kembali.${NC}"
+    exit 1
+fi
 CHATID=$(cat /usr/bin/idchat)
 KEY=$(cat /usr/bin/token)
 export TIME="10"
 export URL="https://api.telegram.org/bot$KEY/sendMessage"
 
+# Cek dependensi jq
+if ! command -v jq &> /dev/null; then
+    echo -e "${ORANGE}jq tidak ditemukan. Menginstall jq...${NC}"
+    apt-get update > /dev/null 2>&1
+    apt-get install -y jq > /dev/null 2>&1
+fi
+
 clear
+echo -e "${GREEN}Mempersiapkan proses backup...${NC}"
 IP=$(curl -sS ipv4.icanhazip.com)
 domain=$(cat /etc/xray/domain 2>/dev/null || echo "Tidak ada domain")
 date=$(date +"%Y-%m-%d")
 timestamp=$(date +"%Y%m%d_%H%M%S")
-
-echo -e "${GREEN}Mohon Menunggu, Proses Backup sedang berlangsung !!${NC}"
+LOCATION=$(curl -s ipinfo.io | jq -r '.city + ", " + .country')
 
 # Backup directory and file
 BACKUP_DIR="/root/backup_${timestamp}"
-BACKUP_FILE="/root/backup_${IP}_${timestamp}.zip"
 BACKUP_FILE_NAME="backup_${IP}_${timestamp}.zip"
+BACKUP_FILE_PATH="/root/${BACKUP_FILE_NAME}"
 
 # Create backup directory
-echo -e "${BLUE}Membuat direktori backup...${NC}"
+echo -e "${BLUE}Membuat direktori backup sementara...${NC}"
 mkdir -p "$BACKUP_DIR" || {
     echo -e "${RED}Gagal membuat direktori backup${NC}"
     exit 1
 }
 
-# Copy system files and directories
-cp -r /etc/passwd /etc/group /etc/shadow /etc/gshadow /etc/crontab "$BACKUP_DIR/"
-cp -r /var/lib/kyt/ /etc/xray /var/www/html/ "$BACKUP_DIR/" 2>/dev/null
+# --- PERBAIKAN UTAMA DIMULAI DI SINI ---
+
+# Daftar file dan direktori yang akan di-backup
+files_to_backup=("/etc/passwd" "/etc/group" "/etc/shadow" "/etc/gshadow" "/etc/crontab")
+dirs_to_backup=("/etc/vless" "/etc/vmess" "/etc/trojan" "/var/lib/kyt" "/etc/xray" "/var/www/html")
+
+echo -e "${BLUE}Menyalin file sistem...${NC}"
+for file in "${files_to_backup[@]}"; do
+    if [ -f "$file" ]; then
+        cp -p "$file" "$BACKUP_DIR/"
+    fi
+done
+
+echo -e "${BLUE}Menyalin data pengguna dan konfigurasi...${NC}"
+for dir in "${dirs_to_backup[@]}"; do
+    if [ -d "$dir" ]; then
+        echo -e "${GREEN} -> Folder ditemukan: $dir ${NC}"
+        cp -r "$dir" "$BACKUP_DIR/"
+    else
+        echo -e "${ORANGE} -> Folder dilewati (tidak ada): $dir ${NC}"
+    fi
+done
+
+# --- PERBAIKAN UTAMA SELESAI ---
 
 # Create ZIP archive
 echo -e "${BLUE}Membuat file ZIP backup...${NC}"
 cd "$BACKUP_DIR" || exit 1
-(zip -r "$BACKUP_FILE" . > /dev/null 2>&1) &
+(zip -r "$BACKUP_FILE_PATH" . > /dev/null 2>&1) &
 pid=$!
 spinner $pid
 wait $pid
@@ -69,29 +102,33 @@ if [ $? -ne 0 ]; then
     rm -rf "$BACKUP_DIR"
     exit 1
 else
-    echo -e "${GREEN}File ZIP backup berhasil dibuat: $BACKUP_FILE${NC}"
+    echo -e "${GREEN}File ZIP backup berhasil dibuat: $BACKUP_FILE_NAME${NC}"
 fi
 
 # Upload to Google Drive
-echo -e "${BLUE}Mengupload backup ke Google Drive...${NC}"
-(rclone copy "$BACKUP_FILE" dr:backup/ > /dev/null 2>&1) &
-pid=$!
-spinner $pid
-wait $pid
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Gagal mengupload backup ke Google Drive${NC}"
-    link="Tidak tersedia"
-else
-    echo -e "${GREEN}Upload ke Google Drive berhasil${NC}"
-    # Get shareable link ONLY if upload is successful
-    echo -e "${BLUE}Mendapatkan link download...${NC}"
-    link=$(rclone link dr:backup/"$BACKUP_FILE_NAME" 2>/dev/null)
-    if [[ ! "$link" =~ "id=" ]]; then
-        echo -e "${RED}Gagal mendapatkan link Google Drive${NC}"
+if command -v rclone &> /dev/null; then
+    echo -e "${BLUE}Mengupload backup ke Google Drive...${NC}"
+    (rclone copy "$BACKUP_FILE_PATH" dr:backup/ > /dev/null 2>&1) &
+    pid=$!
+    spinner $pid
+    wait $pid
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Gagal mengupload backup ke Google Drive${NC}"
         link="Tidak tersedia"
+    else
+        echo -e "${GREEN}Upload ke Google Drive berhasil${NC}"
+        echo -e "${BLUE}Mendapatkan link download...${NC}"
+        link=$(rclone link dr:backup/"$BACKUP_FILE_NAME" 2>/dev/null)
+        if [[ -z "$link" || ! "$link" =~ "id=" ]]; then
+            echo -e "${RED}Gagal mendapatkan link Google Drive${NC}"
+            link="Tidak tersedia"
+        fi
     fi
+    echo -e "${GREEN}Link backup: $link${NC}"
+else
+    echo -e "${ORANGE}rclone tidak terinstall, melewati upload ke Google Drive.${NC}"
+    link="Tidak tersedia"
 fi
-echo -e "${GREEN}Link backup: $link${NC}"
 
 # Send Telegram notification message
 echo -e "${BLUE}Mengirim notifikasi teks ke Telegram...${NC}"
@@ -103,7 +140,7 @@ TEXT="
 🖥️ <b>VPS Info</b>
 ┣ <b>IP Address:</b> <code>${IP}</code>
 ┣ <b>Domain:</b> <code>${domain}</code>
-┗ <b>Lokasi:</b> <code>$(curl -s ipinfo.io/city), $(curl -s ipinfo.io/country)</code>
+┗ <b>Lokasi:</b> <code>${LOCATION}</code>
 
 💾 <b>Backup Details</b>
 ┣ <b>Nama File:</b> <code>${BACKUP_FILE_NAME}</code>
@@ -124,7 +161,7 @@ fi
 # Send backup file to Telegram
 echo -e "${BLUE}Mengirim file backup ke Telegram...${NC}"
 (curl --max-time 180 -F "chat_id=${CHATID}" \
-     -F "document=@${BACKUP_FILE}" \
+     -F "document=@${BACKUP_FILE_PATH}" \
      -F "caption=File backup: ${BACKUP_FILE_NAME}" \
      https://api.telegram.org/bot${KEY}/sendDocument > /dev/null 2>&1) &
 pid=$!
@@ -138,7 +175,7 @@ fi
 
 # Clean up
 echo -e "${BLUE}Membersihkan file dan direktori sementara...${NC}"
-rm -f "$BACKUP_FILE"
+rm -f "$BACKUP_FILE_PATH"
 rm -rf "$BACKUP_DIR"
 
 echo "Proses backup selesai."
