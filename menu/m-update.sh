@@ -71,6 +71,7 @@ rm -rf online-vmess
 rm -rf online-vless
 rm -rf online-troja
 rm -rf online-sshws
+rm -rf update-usage
 
 fun_bar() {
     CMD[0]="$1"
@@ -142,6 +143,8 @@ wget -q -O /usr/bin/online-vmess "https://github.com/hokagelegend9999/genom/raw/
 wget -q -O /usr/bin/online-vless "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-vless" && chmod +x /usr/bin/online-vless
 wget -q -O /usr/bin/online-trojan "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/online-trojan" && chmod +x /usr/bin/online-trojan
 wget -q -O /usr/bin/online-sshws "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/online-sshws" && chmod +x /usr/bin/online-sshws
+wget -q -O /usr/bin/update-usage "https://github.com/hokagelegend9999/genom/raw/refs/heads/main/menu/update-usage" && chmod +x /usr/bin/update-usage
+
 
 chmod +x m-tcp
 chmod +x m-theme
@@ -199,6 +202,7 @@ chmod +x online-vmess
 chmod +x online-vless
 chmod +x online-trojan
 chmod +x online-sshws
+chmod +x update-usage
 clear
 
 }
