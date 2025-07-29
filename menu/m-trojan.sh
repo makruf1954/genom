@@ -160,7 +160,7 @@ d=$((${c} * 1024 * 1024 * 1024))
 if [[ ${c} != "0" ]]; then
 echo "${d}" >/etc/trojan/${user}
 fi
-echo "${iplim}" >/etc/trojan/${user}IP
+echo "login_ip=${iplim}" > /etc/trojan/akun/${user}
 sed -i '/#trojanws$/a\#tr '"$user $exp $uuid"'\
 },{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
 sed -i '/#trojangrpc$/a\#trg '"$user $exp"'\
