@@ -127,8 +127,8 @@ wget -q -O /usr/bin/manual-restore "https://raw.githubusercontent.com/hokagelege
 
 wget -q -O /usr/bin/xraylimit "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/xraylimit.sh" && chmod +x /usr/bin/xraylimit
 wget -q -O /usr/bin/trialvmess "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialvmess.sh" && chmod +x /usr/bin/trialvmess
-wget -q -O /usr/bin/trialvless "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialtrojan.sh" && chmod +x /usr/bin/trialtrojan
-wget -q -O /usr/bin/trialtrojan "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialvless.sh" && chmod +x /usr/bin/trialvless
+wget -q -O /usr/bin/trialvless "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialvless.sh" && chmod +x /usr/bin/trialvless
+wget -q -O /usr/bin/trialtrojan "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialtrojan.sh" && chmod +x /usr/bin/trialtrojan
 wget -q -O /usr/bin/trialssh "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trialssh.sh" && chmod +x /usr/bin/trialssh
 wget -q -O /usr/bin/trial "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trial.sh" && chmod +x /usr/bin/trial
 wget -q -O /usr/bin/trojan-online "https://raw.githubusercontent.com/hokagelegend9999/genom/refs/heads/main/menu/trojan-online" && chmod +x /usr/bin/trojan-online
