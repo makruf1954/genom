@@ -389,7 +389,88 @@ mv /root/gotop /usr/bin
 gotop
 fi
 }
+function del-exp(){
+    local CONFIG_FILE="/etc/xray/config.json"
+    local USER_MARKERS="^#vm |^#vmg |^#tr |^#vl |^#ss "
+    local NOW=$(date +%s)
+    
+    clear
+    echo -e "$COLOR1━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo " Memulai Pembersihan Total User Expired"
+    echo " (Xray Config + Sistem Linux)"
+    echo -e "$COLOR1━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
 
+    # Backup file konfigurasi
+    cp "$CONFIG_FILE" "$CONFIG_FILE.bak.$(date +%F-%T)"
+    echo "File konfigurasi telah di-backup."
+    echo ""
+
+    # 1. Kumpulkan semua user expired dari config.json
+    local EXPIRED_LINES=()
+    local EXPIRED_USERS=() # Menyimpan nama pengguna untuk dihapus dari sistem
+    local DELETED_USERS_LOG=""
+
+    grep -nE "$USER_MARKERS" "$CONFIG_FILE" | while IFS=: read -r line_num comment; do
+        local exp_date=$(echo "$comment" | awk '{print $3}')
+        local user_name=$(echo "$comment" | awk '{print $2}')
+
+        if [[ "$exp_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            local exp_seconds=$(date -d "$exp_date" +%s)
+            
+            if [[ "$exp_seconds" -lt "$NOW" ]]; then
+                echo -e "${RED}Ditemukan user expired: $user_name (exp: $exp_date)${NC}"
+                EXPIRED_LINES+=("$line_num")
+                EXPIRED_USERS+=("$user_name")
+                DELETED_USERS_LOG+="- $user_name ($exp_date)\n"
+            fi
+        fi
+    done
+
+    # 2. Hapus dari config.json (dari bawah ke atas)
+    local SORTED_LINES=$(printf "%s\n" "${EXPIRED_LINES[@]}" | sort -rn)
+
+    if [ -z "$SORTED_LINES" ]; then
+        echo -e "\n${GREEN}✅ Tidak ada pengguna expired yang ditemukan.${NC}"
+    else
+        echo -e "\nMemulai proses penghapusan..."
+        for line_num in $SORTED_LINES; do
+            local user_data_line=$((line_num - 1))
+            sed -i "${user_data_line},${line_num}d" "$CONFIG_FILE"
+        done
+
+        # 3. Hapus pengguna sistem Linux dan file terkait
+        #    'uniq' untuk memastikan tidak ada duplikat jika user muncul di beberapa protokol
+        local UNIQUE_USERS=$(printf "%s\n" "${EXPIRED_USERS[@]}" | sort -u)
+        
+        for user_name in $UNIQUE_USERS; do
+            echo "-> Menghapus user sistem & file untuk: ${GREEN}$user_name${NC}"
+            
+            # Perintah ini menghapus user DAN home directory-nya (/home/nama_user)
+            userdel -r "$user_name" >/dev/null 2>&1
+            
+            # --- (OPSIONAL) HAPUS FILE LAIN JIKA ADA ---
+            # Sesuaikan path ini jika skrip panel Anda menyimpan file di tempat lain
+            # Contoh: menghapus file .txt, .json, atau gambar QR code
+            rm -f /home/vps/public_html/"$user_name".txt
+            rm -f /etc/xray/usertrojan-"$user_name".json
+            # Tambahkan perintah 'rm' lain di sini jika perlu
+        done
+
+        echo "Restart layanan Xray..."
+        systemctl restart xray > /dev/null 2>&1
+        
+        echo -e "\n$COLOR1━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${GREEN}✅ Proses Selesai.${NC}"
+        echo -e "$COLOR1━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo "Log Pengguna Dihapus:"
+        echo -e "$DELETED_USERS_LOG"
+    fi
+
+    echo ""
+    read -n 1 -s -r -p "Tekan tombol apa saja untuk kembali..."
+menu
+}
 #===============================================================================#
 
 function coremenu(){
@@ -450,6 +531,7 @@ echo -e " $COLOR1║${NC} ${WH}[${COLOR1}02${WH}]${NC} ${COLOR1}• ${WH}CHANGE 
 echo -e " $COLOR1║${NC} ${WH}[${COLOR1}03${WH}]${NC} ${COLOR1}• ${WH}CHANGE THEMA SC     ${WH}${WH}[${COLOR1}08${WH}]${NC} ${COLOR1}• ${WH}CHECK CPU VPS      ${WH}$COLOR1║ $NC"
 echo -e " $COLOR1║${NC} ${WH}[${COLOR1}04${WH}]${NC} ${COLOR1}• ${WH}CHANGE CORE MENU    ${WH}${WH}[${COLOR1}09${WH}]${NC} ${COLOR1}• ${WH}CHECK PORT VPS     ${WH}$COLOR1║ $NC"
 echo -e " $COLOR1║${NC} ${WH}[${COLOR1}05${WH}]${NC} ${COLOR1}• ${WH}CLEAR RAM CACHE     ${WH}${WH}[${COLOR1}10${WH}]${NC} ${COLOR1}• ${WH}REBUILD VPS        ${WH}$COLOR1║ $NC"
+echo -e " $COLOR1║${NC} ${WH}[${COLOR1}11${WH}]${NC} ${COLOR1}• ${WH}DELETE USER EXPIRED                           ${WH}$COLOR1║ $NC"
 echo -e " $COLOR1╚══════════════════════════════════════════════════════╝${NC}"
 echo -e ""
 echo -ne " ${WH}Select menu ${COLOR1}: ${WH}"; read opt
@@ -464,6 +546,7 @@ case $opt in
 07 |8) clear ; gotopp ;; 
 09 |9) clear ; check-port ;; 
 10 |10) clear ; wget -q https://github.com/hokagelegend9999/genom/raw/refs/heads/main/install-ulang-vps && bash install-ulang-vps ;; 
+11 |11) clear ; del-exp ;;
 00 |0) clear ; menu ;; 
 *) echo -e "" ; echo "Anda salah tekan" ; sleep 1 ; system ;;
 esac
