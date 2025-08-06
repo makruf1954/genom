@@ -51,8 +51,7 @@ if [ -z "$permission_file" ]; then
 fi
 
 # Ambil IP VPS dengan metode alternatif
-IP_VPS=$(hostname -I | awk '{print $1}')
-
+IP_VPS=$(curl -s https://ipinfo.io/ip)
 # =============================================
 #          [ Pengecekan IP ]
 # =============================================
