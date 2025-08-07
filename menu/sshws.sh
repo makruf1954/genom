@@ -224,6 +224,19 @@ useradd -e `date -d "$masaaktif days" +"%Y-%m-%d"` -s /bin/false -M $Login
 exp="$(chage -l $Login | grep "Account expires" | awk -F": " '{print $2}')"
 echo -e "$Pass\n$Pass\n"|passwd $Login &> /dev/null
 echo -e "### $Login $expi $Pass" >> /etc/xray/ssh
+KUOTA_DIR="/etc/kuota-ssh"
+if [ ! -d "$KUOTA_DIR" ]; then
+    mkdir -p "$KUOTA_DIR"
+fi
+# Atur limit kuota di sini (dalam byte). Contoh: 5GB
+DEFAULT_LIMIT_BYTES="5368709120" 
+
+cat > ${KUOTA_DIR}/${Login} <<-END
+USERNAME="${Login}"
+STATUS="AKTIF"
+LIMIT_BYTES="${DEFAULT_LIMIT_BYTES}"
+USAGE_BYTES="0"
+END
 cat > /home/vps/public_html/ssh-$Login.txt <<-END
 _______________________________
 Format SSH OVPN Account
