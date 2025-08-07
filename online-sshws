@@ -43,7 +43,15 @@ if [ ! -d "$USER_DIR" ]; then
   echo "Direktori kuota SSH tidak ditemukan."
   exit 1
 fi
+JUMLAH_PENGGUNA=$(find "$USER_DIR" -maxdepth 1 -type f | wc -l)
 
+# Jika tidak ada pengguna, tampilkan pesan custom dan keluar
+if [ "$JUMLAH_PENGGUNA" -eq 0 ]; then
+    echo "" # Memberi spasi
+    echo "User SSHWS belum di buat atau di temukan"
+    echo "" # Memberi spasi
+    exit 0
+fi
 total_user=0
 total_usage_bytes=0
 
