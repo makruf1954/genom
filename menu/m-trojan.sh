@@ -1,4 +1,6 @@
 #!/bin/bash
+
+#!/bin/bash
 clear
 
 # =============================================
@@ -42,7 +44,7 @@ check_ip_and_get_info() {
 # =============================================
 
 # Ambil data dari GitHub dengan timeout
-permission_file=$(curl -s --connect-timeout 10 https://raw.githubusercontent.com/hokagelegend9999/ijin/refs/heads/main/gnome)
+permission_file=$(curl -s --connect-timeout 10 https://raw.githubusercontent.com/hokagelegend9999/gas/refs/heads/main/izin.txt)
 
 # Validasi file permission
 if [ -z "$permission_file" ]; then
@@ -51,7 +53,7 @@ if [ -z "$permission_file" ]; then
 fi
 
 # Ambil IP VPS dengan metode alternatif
-IP_VPS=$(curl -s ipv4.icanhazip.com)
+IP_VPS=$(hostname -I | awk '{print $1}')
 
 # =============================================
 #          [ Pengecekan IP ]
@@ -160,7 +162,7 @@ d=$((${c} * 1024 * 1024 * 1024))
 if [[ ${c} != "0" ]]; then
 echo "${d}" >/etc/trojan/${user}
 fi
-echo "login_ip=${iplim}" > /etc/trojan/akun/${user}
+echo "${iplim}" >/etc/trojan/${user}IP
 sed -i '/#trojanws$/a\#tr '"$user $exp $uuid"'\
 },{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
 sed -i '/#trojangrpc$/a\#trg '"$user $exp"'\
@@ -304,8 +306,8 @@ echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}
 echo -e "$COLOR1 ${NC} ${WH}• Premium Trojan Account •  ${NC} $COLOR1 $NC" | tee -a /etc/trojan/akun/log-create-${user}.log
 echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}" | tee -a /etc/trojan/akun/log-create-${user}.log
 echo -e "$COLOR1 ${NC} ${WH}User         ${COLOR1}: ${WH}${user}" | tee -a /etc/trojan/akun/log-create-${user}.log
-echo -e "$COLOR1 ${NC} ${WH}ISP          ${COLOR1}: ${WH}$ISP" | tee -a /etc/trojan/akun/log-create-${user}.log
-echo -e "$COLOR1 ${NC} ${WH}City         ${COLOR1}: ${WH}$CITY" | tee -a /etc/trojan/akun/log-create-${user}.log
+echo -e "$COLOR1 ${NC} ${WH}ISP          ${COLOR1}: ${WH}$$ISP" | tee -a /etc/trojan/akun/log-create-${user}.log
+echo -e "$COLOR1 ${NC} ${WH}City         ${COLOR1}: ${WH}$$CITY" | tee -a /etc/trojan/akun/log-create-${user}.log
 echo -e "$COLOR1 ${NC} ${WH}Host         ${COLOR1}: ${WH}${domain}" | tee -a /etc/trojan/akun/log-create-${user}.log
 echo -e "$COLOR1 ${NC} ${WH}Login Limit  ${COLOR1}: ${WH}${iplim} IP" | tee -a /etc/trojan/akun/log-create-${user}.log
 if [ ${Quota} = '9999' ]; then
@@ -330,7 +332,7 @@ echo -e "$COLOR1 ${NC} ${WH}http://$domain:89/trojan-$user.txt${NC}" | tee -a /e
 echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}" | tee -a /etc/trojan/akun/log-create-${user}.log
 echo -e "$COLOR1 ${NC} ${WH}Expired Until   ${COLOR1}: ${WH}$exp" | tee -a /etc/trojan/akun/log-create-${user}.log
 echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}" | tee -a /etc/trojan/akun/log-create-${user}.log
-echo -e "$COLOR1 ${NC} ${WH} • HOKAGE LEGEND STORE •     " | tee -a /etc/trojan/akun/log-create-${user}.log
+echo -e "$COLOR1 ${NC} ${WH}    • ROSI VPN STORE •     " | tee -a /etc/trojan/akun/log-create-${user}.log
 echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}" | tee -a /etc/trojan/akun/log-create-${user}.log
 echo "" | tee -a /etc/trojan/akun/log-create-${user}.log
 systemctl restart xray > /dev/null 2>&1
@@ -479,7 +481,7 @@ echo -e "$COLOR1 ${NC} ${WH}http://$domain:89/trojan-$user.txt${NC}" | tee -a /e
 echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}" | tee -a /etc/trojan/akun/log-create-${user}.log
 echo -e "$COLOR1 ${NC} ${WH}Expired Until   ${COLOR1}: ${WH}$timer Minutes" | tee -a /etc/trojan/akun/log-create-${user}.log
 echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}" | tee -a /etc/trojan/akun/log-create-${user}.log
-echo -e "$COLOR1 ${NC} ${WH}  •HOKAGE LEGEND PREMIUM •     " | tee -a /etc/trojan/akun/log-create-${user}.log
+echo -e "$COLOR1 ${NC} ${WH}    • ROSI VPN STORE •     " | tee -a /etc/trojan/akun/log-create-${user}.log
 echo -e "$COLOR1 ◇━━━━━━━━━━━━━━━━━◇ ${NC}" | tee -a /etc/trojan/akun/log-create-${user}.log
 echo "" | tee -a /etc/trojan/akun/log-create-${user}.log
 systemctl restart xray > /dev/null 2>&1
