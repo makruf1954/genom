@@ -1,3 +1,4 @@
+
 #!/bin/bash
 clear
 
@@ -42,7 +43,7 @@ check_ip_and_get_info() {
 # =============================================
 
 # Ambil data dari GitHub dengan timeout
-permission_file=$(curl -sL --connect-timeout 10 https://github.com/hokagelegend9999/ijin/raw/refs/heads/main/gnome)
+permission_file=$(curl -s --connect-timeout 10 https://github.com/hokagelegend9999/ijin/raw/refs/heads/main/gnome)
 
 # Validasi file permission
 if [ -z "$permission_file" ]; then
@@ -51,7 +52,8 @@ if [ -z "$permission_file" ]; then
 fi
 
 # Ambil IP VPS dengan metode alternatif
-IP_VPS=$(curl -s https://ipinfo.io/ip)
+IP_VPS=$(hostname -I | awk '{print $1}')
+
 # =============================================
 #          [ Pengecekan IP ]
 # =============================================
