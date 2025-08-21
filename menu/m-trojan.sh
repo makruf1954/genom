@@ -767,62 +767,92 @@ else
 echo "$(((bytes + 1073741823) / 1073741824)) GB"
 fi
 }
-function cek-tr(){
-clear
-xrayy=$(cat /var/log/xray/access.log | wc -l)
-if [[ xrayy -le 5 ]]; then
-systemctl restart xray
-fi
-xraylimit
-echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
-echo -e "$COLOR1│${NC}${COLBG1}             ${WH}• TROJAN USER ONLINE •              ${NC}$COLOR1│ $NC"
-echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
-echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
-vm=($(cat /etc/xray/config.json | grep "^#trg" | awk '{print $2}' | sort -u))
-echo -n >/tmp/vm
-for db1 in ${vm[@]}; do
-logvm=$(cat /var/log/xray/access.log | grep -w "email: ${db1}" | tail -n 100)
-while read a; do
-if [[ -n ${a} ]]; then
-set -- ${a}
-ina="${7}"
-inu="${2}"
-anu="${3}"
-enu=$(echo "${anu}" | sed 's/tcp://g' | sed '/^$/d' | cut -d. -f1,2,3)
-now=$(tim2sec ${timenow})
-client=$(tim2sec ${inu})
-nowt=$(((${now} - ${client})))
-if [[ ${nowt} -lt 40 ]]; then
-cat /tmp/vm | grep -w "${ina}" | grep -w "${enu}" >/dev/null
-if [[ $? -eq 1 ]]; then
-echo "${ina} ${inu} WIB : ${enu}" >>/tmp/vm
-splvm=$(cat /tmp/vm)
-fi
-fi
-fi
-done <<<"${logvm}"
-done
-if [[ ${splvm} != "" ]]; then
-for vmuser in ${vm[@]}; do
-vmhas=$(cat /tmp/vm | grep -w "${vmuser}" | wc -l)
-tess=0
-if [[ ${vmhas} -gt $tess ]]; then
-byt=$(cat /etc/limit/trojan/${vmuser})
-gb=$(convert ${byt})
-lim=$(cat /etc/trojan/${vmuser})
-lim2=$(convert ${lim})
-echo -e "$COLOR1${NC} USERNAME : \033[0;33m$vmuser"
-echo -e "$COLOR1${NC} IP LOGIN : \033[0;33m$vmhas"
-echo -e "$COLOR1${NC} USAGE : \033[0;33m$gb"
-echo -e "$COLOR1${NC} LIMIT : \033[0;33m$lim2"
-echo -e ""
-fi
-done
-fi
-echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
-echo ""
-read -n 1 -s -r -p "   Press any key to back on menu"
-m-trojan
+function cek-tr() {
+    clear
+    
+    # ANSI Color Codes
+    COLOR_RESET="\e[0m"
+    COLOR_GREEN="\e[32m"
+    COLOR_RED="\e[31m"
+    COLOR_YELLOW="\e[33m"
+    COLOR_CYAN="\e[36m"
+    COLOR_WHITE="\e[37m"
+
+    # Restart Xray jika log kurang dari 5
+    xrayy=$(cat /var/log/xray/access.log | wc -l)
+    [[ $xrayy -le 5 ]] && systemctl restart xray
+
+    xraylimit
+
+    # Mendapatkan daftar semua pengguna trojan
+    vm=($(cat /etc/xray/config.json | grep "^#trg" | awk '{print $2}' | sort -u))
+
+    # Proses data dan tampilkan
+    if [[ ${#vm[@]} -eq 0 ]]; then
+        echo -e "${COLOR_WHITE}┌──────────────────────────────────────────────────────────┐${COLOR_RESET}"
+        echo -e "${COLOR_WHITE}│                  Tidak ada pengguna TROJAN               │${COLOR_RESET}"
+        echo -e "${COLOR_WHITE}└──────────────────────────────────────────────────────────┘${COLOR_RESET}"
+    else
+        for user in "${vm[@]}"; do
+            # Mendapatkan data penggunaan
+            used_bytes=$(cat /etc/limit/trojan/"${user}" 2>/dev/null || echo 0)
+            limit_bytes=$(cat /etc/trojan/"${user}" 2>/dev/null || echo 0)
+            
+            # Konversi bytes ke GB
+            used_gb=$(awk "BEGIN {printf \"%.2f\", $used_bytes / 1024^3}")
+            limit_gb=$(awk "BEGIN {printf \"%.2f\", $limit_bytes / 1024^3}")
+            
+            # Menghitung sisa kuota
+            if [[ "$limit_bytes" -gt 0 ]]; then
+                remaining_gb=$(awk "BEGIN {printf \"%.2f\", ($limit_bytes - $used_bytes) / 1024^3}")
+            else
+                remaining_gb="Unlimited"
+            fi
+
+            # Cek status online (logika yang lebih spesifik)
+            # Periksa log 100 baris terakhir untuk aktivitas
+            last_activity=$(grep -w "email: ${user}" /var/log/xray/access.log | tail -n 1)
+            is_online=false
+            if [[ -n "$last_activity" ]]; then
+                # Dapatkan timestamp dari log
+                timestamp_log=$(echo "$last_activity" | awk '{print $2}')
+                
+                # Konversi timestamp ke detik
+                timestamp_sec=$(date -d "${timestamp_log}" +%s)
+                
+                # Waktu sekarang dalam detik
+                now_sec=$(date +%s)
+                
+                # Jika aktivitas kurang dari 120 detik (2 menit) lalu
+                if (( (now_sec - timestamp_sec) < 120 )); then
+                    is_online=true
+                fi
+            fi
+
+            # Tentukan status dan warna
+            if $is_online; then
+                status_symbol="${COLOR_GREEN}● Online${COLOR_RESET}"
+            else
+                status_symbol="${COLOR_RED}● Offline${COLOR_RESET}"
+            fi
+
+            # Dapatkan IP login
+            login_ip_count=$(grep -w "email: ${user}" /var/log/xray/access.log | awk '{print $3}' | sed 's/tcp:\/\///g' | sort -u | wc -l)
+
+            # Tampilkan output
+            echo -e "${COLOR_WHITE}┌─${COLOR_CYAN}[ ${user} ${COLOR_WHITE}| Tipe: trojan ]─┐${COLOR_RESET}"
+            echo -e "${COLOR_WHITE}│${COLOR_RESET} 🚦 Status      : ${status_symbol}"
+            echo -e "${COLOR_WHITE}│${COLOR_RESET} 📥 Terpakai    : ${COLOR_YELLOW}${used_gb}GB${COLOR_RESET}"
+            echo -e "${COLOR_WHITE}│${COLOR_RESET} 📈 Batas Kuota : ${COLOR_GREEN}${limit_gb}GB${COLOR_RESET}"
+            echo -e "${COLOR_WHITE}│${COLOR_RESET} 📊 Sisa Kuota  : ${COLOR_CYAN}${remaining_gb}GB${COLOR_RESET}"
+            echo -e "${COLOR_WHITE}│${COLOR_RESET} 💻 Login IP    : ${COLOR_WHITE}${login_ip_count}${COLOR_RESET}"
+            echo -e "${COLOR_WHITE}└───────────────────────────────────────────────┘${COLOR_RESET}"
+            echo ""
+        done
+    fi
+    
+    read -n 1 -s -r -p "     Press any key to back on menu"
+    m-trojan
 }
 function list-trojan(){
 clear
@@ -1172,7 +1202,7 @@ m-trojan
 clear
 author=$(cat /etc/profil)
 echo -e " $COLOR1╔════════════════════════════════════════════════════╗${NC}"
-echo -e " $COLOR1║${NC}${COLBG1}          ${WH}• TROJAN PANEL MENU GENOME •               ${NC}$COLOR1║ $NC"
+echo -e " $COLOR1║${NC}${COLBG1}             ${WH}• VMESS PANEL MENU •                   ${NC}$COLOR1║ $NC"
 echo -e " $COLOR1╚════════════════════════════════════════════════════╝${NC}"
 echo -e " $COLOR1╔════════════════════════════════════════════════════╗${NC}"
 echo -e " $COLOR1║ $NC ${WH}[${COLOR1}01${WH}]${NC} ${COLOR1}• ${WH}ADD AKUN${NC}         ${WH}[${COLOR1}06${WH}]${NC} ${COLOR1}• ${WH}CEK USER CONFIG${NC}    $COLOR1║ $NC"
