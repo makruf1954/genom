@@ -1113,106 +1113,89 @@ fi
 }
 function cek-vmess() {
     clear
+
+    # ANSI Color Codes
+    COLOR_RESET="\e[0m"
+    COLOR_GREEN="\e[32m"
+    COLOR_RED="\e[31m"
+    COLOR_YELLOW="\e[33m"
+    COLOR_CYAN="\e[36m"
+    COLOR_WHITE="\e[37m"
+
     # Restart Xray jika log kurang dari 5
     xrayy=$(cat /var/log/xray/access.log | wc -l)
     [[ $xrayy -le 5 ]] && systemctl restart xray
-    
+
     xraylimit
-    
-    # Get terminal dimensions
-    term_width=$(tput cols)
-    min_width=40  # Minimum terminal width
-    
-    # Check terminal width
-    if [[ $term_width -lt $min_width ]]; then
-        echo -e "${COLOR1}┌────────────────────────────────────────┐${NC}"
-        echo -e "${COLOR1}│ ${WH}Terminal too narrow! (min ${min_width} columns) ${COLOR1}│${NC}"
-        echo -e "${COLOR1}└────────────────────────────────────────┘${NC}"
-        read -n 1 -s -r -p "   Press any key to continue"
-        m-vmess
-        return
-    fi
-    
-    # Calculate dynamic widths
-    border_chars=6  # Borders and spaces
-    user_col_width=$(( (term_width - border_chars) * 10 / 100 ))
-    usage_col_width=$(( (term_width - border_chars) * 15 / 100 ))
-    
-    # Header
-    echo -e "${COLOR1}┌──────────────────────────────────────────────────────────┐${NC}"
-    echo -e "${COLOR1}│ ${WH}${COLBG1}                   VMESS USER ONLINE                    ${NC}${COLOR1} │${NC}"
-    echo -e "${COLOR1}├──────────────────────────────────────────────────────────┤${NC}"
-    
-    # Column titles with dynamic width
-    printf "${COLOR1}│ ${CYAN}%-${user_col_width}s ${COLOR1}   ${CYAN}%-${usage_col_width}s${COLOR1}│${NC}\n" \
-    "        USERNAME" "          USAGE"
-    
-    echo -e "${COLOR1}├─────────────────────────────┼────────────────────────────┤${NC}"
-    
-    # Proses data
+
+    # Mendapatkan daftar semua pengguna vmess
     vm=($(cat /etc/xray/config.json | grep "^#vmg" | awk '{print $2}' | sort -u))
-    echo -n > /tmp/vm
-    TOTAL_ONLINE=0
-    
-    # Parsing log
-    for db1 in ${vm[@]}; do
-        logvm=$(cat /var/log/xray/access.log | grep -w "email: ${db1}" | tail -n 100)
-        while read a; do
-            if [[ -n ${a} ]]; then
-                set -- ${a}
-                ina="${7}"
-                inu="${2}"
-                anu="${3}"
-                enu=$(echo "${anu}" | sed 's/tcp://g' | sed '/^$/d' | cut -d. -f1,2,3)
-                now=$(tim2sec ${timenow})
-                client=$(tim2sec ${inu})
-                nowt=$(((${now} - ${client})))
-                
-                if [[ ${nowt} -lt 40 ]]; then
-                    if ! grep -qw "${ina}" /tmp/vm; then
-                        echo "${ina} ${inu} WIB : ${enu}" >> /tmp/vm
-                    fi
+
+    # Proses data dan tampilkan
+    if [[ ${#vm[@]} -eq 0 ]]; then
+        echo -e "${COLOR_WHITE}┌──────────────────────────────────────────────────────────┐${COLOR_RESET}"
+        echo -e "${COLOR_WHITE}│                  Tidak ada pengguna VMESS                │${COLOR_RESET}"
+        echo -e "${COLOR_WHITE}└──────────────────────────────────────────────────────────┘${COLOR_RESET}"
+    else
+        for user in "${vm[@]}"; do
+            # Mendapatkan data penggunaan
+            used_bytes=$(cat /etc/limit/vmess/"${user}" 2>/dev/null || echo 0)
+            limit_bytes=$(cat /etc/vmess/"${user}" 2>/dev/null || echo 0)
+
+            # Konversi bytes ke GB
+            used_gb=$(awk "BEGIN {printf \"%.2f\", $used_bytes / 1024^3}")
+            limit_gb=$(awk "BEGIN {printf \"%.2f\", $limit_bytes / 1024^3}")
+
+            # Menghitung sisa kuota
+            if [[ "$limit_bytes" -gt 0 ]]; then
+                remaining_gb=$(awk "BEGIN {printf \"%.2f\", ($limit_bytes - $used_bytes) / 1024^3}")
+            else
+                remaining_gb="Unlimited"
+            fi
+
+            # Cek status online (logika yang lebih spesifik)
+            # Periksa log 100 baris terakhir untuk aktivitas
+            last_activity=$(grep -w "email: ${user}" /var/log/xray/access.log | tail -n 1)
+            is_online=false
+            if [[ -n "$last_activity" ]]; then
+                # Dapatkan timestamp dari log
+                timestamp_log=$(echo "$last_activity" | awk '{print $2}')
+
+                # Konversi timestamp ke detik
+                timestamp_sec=$(date -d "${timestamp_log}" +%s)
+
+                # Waktu sekarang dalam detik
+                now_sec=$(date +%s)
+
+                # Jika aktivitas kurang dari 120 detik (2 menit) lalu
+                if (( (now_sec - timestamp_sec) < 120 )); then
+                    is_online=true
                 fi
             fi
-        done <<< "${logvm}"
-    done
-    
-    # Tampilkan output
-    if [[ -s /tmp/vm ]]; then
-        for vmuser in ${vm[@]}; do
-            vmhas=$(grep -w "${vmuser}" /tmp/vm | wc -l)
-            if [[ ${vmhas} -gt 0 ]]; then
-                ((TOTAL_ONLINE++))
-                byt=$(cat /etc/limit/vmess/${vmuser})
-                gb=$(convert ${byt})
-                lim=$(cat /etc/vmess/${vmuser})
-                lim2=$(convert ${lim})
-                
-                # Truncate long usernames
-                display_user=$(echo "$vmuser" | cut -c 1-$((user_col_width-5)) )
-                [[ ${#vmuser} -gt $((user_col_width-5)) ]] && display_user="${display_user}.."
-                
-                printf "${COLOR1}│ ${WH}🔑 %-$((${user_col_width}-3))s ${COLOR1}${WH}📤 %-$((${usage_col_width}-3))s ${COLOR1}│${NC}\n" \
-                "${display_user}" \
-                "${gb} / ${lim2}"
-                
-                echo -e "${COLOR1}├──────────────────────────────────────────────────────────┤${NC}"
+
+            # Tentukan status dan warna
+            if $is_online; then
+                status_symbol="${COLOR_GREEN}● Online${COLOR_RESET}"
+            else
+                status_symbol="${COLOR_RED}● Offline${COLOR_RESET}"
             fi
+
+            # Dapatkan IP login (logika sederhana, mungkin perlu disesuaikan)
+            login_ip_count=$(grep -w "email: ${user}" /var/log/xray/access.log | awk '{print $3}' | sed 's/tcp:\/\///g' | sort -u | wc -l)
+
+            # Tampilkan output
+            echo -e "${COLOR_WHITE}┌─${COLOR_CYAN}[ ${user} ${COLOR_WHITE}| Tipe: vmess ]─┐${COLOR_RESET}"
+            echo -e "${COLOR_WHITE}│${COLOR_RESET} 🚦 Status      : ${status_symbol}"
+            echo -e "${COLOR_WHITE}│${COLOR_RESET} 📥 Terpakai    : ${COLOR_YELLOW}${used_gb}GB${COLOR_RESET}"
+            echo -e "${COLOR_WHITE}│${COLOR_RESET} 📈 Batas Kuota : ${COLOR_GREEN}${limit_gb}GB${COLOR_RESET}"
+            echo -e "${COLOR_WHITE}│${COLOR_RESET} 📊 Sisa Kuota  : ${COLOR_CYAN}${remaining_gb}GB${COLOR_RESET}"
+            echo -e "${COLOR_WHITE}│${COLOR_RESET} 💻 Login IP    : ${COLOR_WHITE}${login_ip_count}${COLOR_RESET}"
+            echo -e "${COLOR_WHITE}└───────────────────────────────────────────────┘${COLOR_RESET}"
+            echo ""
         done
-        
-        # Footer
-        footer_text="Total Online Users : ${TOTAL_ONLINE}"
-        footer_pad=$(( term_width - ${#footer_text} - 12 ))
-        printf "${COLOR1}│ ${WH}%s%${footer_pad}s ${COLOR1}│${NC}\n" "$footer_text" " "
-    else
-        no_user_text="                   No active users"
-        no_user_pad=$(( (term_width - ${#no_user_text} - 4) / 2 ))
-        printf "${COLOR1}│ ${WH}%s%${footer_pad}s ${COLOR1}${NC}\n" " " "$no_user_text" " "
     fi
-    
-    echo -e "${COLOR1}└──────────────────────────────────────────────────────────┘${NC}"
-    echo ""
-    read -n 1 -s -r -p "              Press any key to back on menu"
+
+    read -n 1 -s -r -p "     Press any key to back on menu"
     m-vmess
 }
 function list-vmess(){
