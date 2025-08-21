@@ -1172,7 +1172,7 @@ m-trojan
 clear
 author=$(cat /etc/profil)
 echo -e " $COLOR1╔════════════════════════════════════════════════════╗${NC}"
-echo -e " $COLOR1║${NC}${COLBG1}             ${WH}• VMESS PANEL MENU •                   ${NC}$COLOR1║ $NC"
+echo -e " $COLOR1║${NC}${COLBG1}          ${WH}• TROJAN PANEL MENU GENOME •                   ${NC}$COLOR1║ $NC"
 echo -e " $COLOR1╚════════════════════════════════════════════════════╝${NC}"
 echo -e " $COLOR1╔════════════════════════════════════════════════════╗${NC}"
 echo -e " $COLOR1║ $NC ${WH}[${COLOR1}01${WH}]${NC} ${COLOR1}• ${WH}ADD AKUN${NC}         ${WH}[${COLOR1}06${WH}]${NC} ${COLOR1}• ${WH}CEK USER CONFIG${NC}    $COLOR1║ $NC"
