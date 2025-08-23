@@ -68,11 +68,10 @@ case $choice in
     2)
         read -p "Masukkan link Google Drive: " GDRIVE_LINK
         read -p "Masukkan nama file backup (.zip): " file_name
-
+        
         BACKUP_FILE_PATH="/root/$file_name"
         echo -e "${BLUE}Mendownload $file_name dari Google Drive...${NC}"
-
-        # Menggunakan wget untuk mengunduh langsung dari URL
+        
         (wget -q --show-progress -O "$BACKUP_FILE_PATH" "$GDRIVE_LINK") &
         pid=$!
         spinner $pid
@@ -109,7 +108,6 @@ echo ""
 
 if [[ ! "$CONFIRM" =~ ^[yY]$ ]]; then
     echo -e "${BLUE}Proses restore dibatalkan oleh pengguna.${NC}"
-    # Hapus file yang didownload jika proses dibatalkan
     if [ "$DOWNLOADED_FROM_GDRIVE" = true ]; then
         rm -f "$BACKUP_FILE_PATH"
     fi
@@ -137,10 +135,29 @@ fi
 echo -e "${GREEN}Ekstrak berhasil.${NC}"
 
 echo -e "${BLUE}Memulihkan data ke sistem...${NC}"
-(cp -rf "$TEMP_RESTORE_DIR"/* /) &
-pid=$!
-spinner $pid
-wait $pid
+
+# Bagian ini yang diubah untuk menyalin file ke lokasi yang benar
+echo -e "${BLUE}-> Memulihkan file konfigurasi Xray...${NC}"
+[ -d "$TEMP_RESTORE_DIR/xray" ] && cp -r "$TEMP_RESTORE_DIR/xray" "/etc/"
+
+echo -e "${BLUE}-> Memulihkan data pengguna (VLess, VMess, Trojan)...${NC}"
+[ -d "$TEMP_RESTORE_DIR/vless" ] && cp -r "$TEMP_RESTORE_DIR/vless" "/etc/"
+[ -d "$TEMP_RESTORE_DIR/vmess" ] && cp -r "$TEMP_RESTORE_DIR/vmess" "/etc/"
+[ -d "$TEMP_RESTORE_DIR/trojan" ] && cp -r "$TEMP_RESTORE_DIR/trojan" "/etc/"
+
+echo -e "${BLUE}-> Memulihkan data kyt...${NC}"
+[ -d "$TEMP_RESTORE_DIR/kyt" ] && cp -r "$TEMP_RESTORE_DIR/kyt" "/var/lib/"
+
+echo -e "${BLUE}-> Memulihkan file web...${NC}"
+[ -d "$TEMP_RESTORE_DIR/html" ] && cp -r "$TEMP_RESTORE_DIR/html" "/var/www/"
+
+echo -e "${BLUE}-> Memulihkan file sistem (passwd, group, dll)...${NC}"
+[ -f "$TEMP_RESTORE_DIR/passwd" ] && cp -p "$TEMP_RESTORE_DIR/passwd" "/etc/"
+[ -f "$TEMP_RESTORE_DIR/group" ] && cp -p "$TEMP_RESTORE_DIR/group" "/etc/"
+[ -f "$TEMP_RESTORE_DIR/shadow" ] && cp -p "$TEMP_RESTORE_DIR/shadow" "/etc/"
+[ -f "$TEMP_RESTORE_DIR/gshadow" ] && cp -p "$TEMP_RESTORE_DIR/gshadow" "/etc/"
+[ -f "$TEMP_RESTORE_DIR/crontab" ] && cp -p "$TEMP_RESTORE_DIR/crontab" "/etc/"
+
 echo -e "${GREEN}Data berhasil dipulihkan.${NC}"
 
 echo -e "${BLUE}Me-restart layanan terkait...${NC}"
@@ -152,7 +169,6 @@ echo -e "${GREEN}Layanan telah di-restart.${NC}"
 
 echo -e "${BLUE}Membersihkan file sementara...${NC}"
 rm -rf "$TEMP_RESTORE_DIR"
-# Hapus file zip setelah selesai, baik yang lokal maupun yang didownload
 if [ -f "$BACKUP_FILE_PATH" ]; then
     rm -f "$BACKUP_FILE_PATH"
 fi
