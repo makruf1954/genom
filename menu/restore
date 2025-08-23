@@ -12,7 +12,7 @@ CYAN='\033[0;36m'
 LIGHT='\033[0;37m'
 # ==========================================
 
-# Function to display progress spinner
+# Fungsi untuk menampilkan progress spinner
 spinner() {
     local pid=$1
     local delay=0.1
@@ -27,14 +27,14 @@ spinner() {
     printf "    \b\b\b\b"
 }
 
-# Must be run as root
+# Harus dijalankan sebagai root
 if [[ $EUID -ne 0 ]]; then
-   echo -e "${RED}Skrip ini harus dijalankan sebagai root!${NC}" 
-   exit 1
+    echo -e "${RED}Skrip ini harus dijalankan sebagai root!${NC}"
+    exit 1
 fi
 
-# Cek dependensi
-for cmd in rclone unzip; do
+# Cek dependensi yang dibutuhkan
+for cmd in rclone unzip wget; do
     if ! command -v $cmd &> /dev/null; then
         echo -e "${ORANGE}$cmd tidak ditemukan. Menginstall...${NC}"
         apt-get update > /dev/null 2>&1
@@ -49,7 +49,7 @@ echo "=================================================="
 echo ""
 echo -e "Pilih sumber file backup:"
 echo -e "1. Restore dari File Lokal (.zip)"
-echo -e "2. Restore dari Google Drive (rclone)"
+echo -e "2. Restore dari Google Drive (wget)"
 echo ""
 read -p "Masukkan pilihan [1-2]: " -r choice
 
@@ -66,42 +66,25 @@ case $choice in
         BACKUP_FILE_PATH=$LOCAL_FILE
         ;;
     2)
-        echo -e "${BLUE}Mencari file backup di Google Drive (dr:backup/)...${NC}"
-        # List zip files in Google Drive backup folder
-        mapfile -t files < <(rclone lsf dr:backup/ --include "*.zip")
-        
-        if [ ${#files[@]} -eq 0 ]; then
-            echo -e "${RED}Tidak ada file backup .zip yang ditemukan di Google Drive (dr:backup/).${NC}"
+        read -p "Masukkan link Google Drive: " GDRIVE_LINK
+        read -p "Masukkan nama file backup (.zip): " file_name
+
+        BACKUP_FILE_PATH="/root/$file_name"
+        echo -e "${BLUE}Mendownload $file_name dari Google Drive...${NC}"
+
+        # Menggunakan wget untuk mengunduh langsung dari URL
+        (wget -q --show-progress -O "$BACKUP_FILE_PATH" "$GDRIVE_LINK") &
+        pid=$!
+        spinner $pid
+        wait $pid
+
+        if [ $? -eq 0 ]; then
+            DOWNLOADED_FROM_GDRIVE=true
+            echo -e "${GREEN}Download berhasil.${NC}"
+        else
+            echo -e "${RED}Gagal mendownload file. Pastikan link dan nama file valid.${NC}"
             exit 1
         fi
-        
-        echo -e "${CYAN}Pilih file backup yang ingin dipulihkan:${NC}"
-        select_prompt="Pilih nomor file (atau 'q' untuk keluar): "
-        PS3="$select_prompt"
-        select file in "${files[@]}"; do
-            if [[ -n "$file" ]]; then
-                echo -e "${BLUE}Mendownload $file dari Google Drive...${NC}"
-                (rclone copy "dr:backup/$file" /root/) &
-                pid=$!
-                spinner $pid
-                wait $pid
-                
-                if [ -f "/root/$file" ]; then
-                    BACKUP_FILE_PATH="/root/$file"
-                    DOWNLOADED_FROM_GDRIVE=true
-                    echo -e "${GREEN}Download berhasil.${NC}"
-                    break
-                else
-                    echo -e "${RED}Gagal mendownload file.${NC}"
-                    exit 1
-                fi
-            elif [[ "$REPLY" == "q" ]]; then
-                echo "Proses dibatalkan."
-                exit 0
-            else
-                echo "Pilihan tidak valid."
-            fi
-        done
         ;;
     *)
         echo -e "${RED}Pilihan tidak valid.${NC}"
@@ -154,7 +137,6 @@ fi
 echo -e "${GREEN}Ekstrak berhasil.${NC}"
 
 echo -e "${BLUE}Memulihkan data ke sistem...${NC}"
-# Perintah ini sangat kuat. Menyalin semua isi folder restore ke root direktori server.
 (cp -rf "$TEMP_RESTORE_DIR"/* /) &
 pid=$!
 spinner $pid
